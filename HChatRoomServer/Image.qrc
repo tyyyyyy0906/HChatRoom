@@ -1,0 +1,9 @@
+<RCC>
+    <qresource prefix="/Server">
+        <file>image/HChatRoom_MainWindow_Background.png</file>
+        <file>image/Menu/server_menu_copy.svg</file>
+        <file>image/Menu/server_menu_delete.svg</file>
+        <file>image/Menu/server_menu_selectall.svg</file>
+        <file>image/Message/message_icon.png</file>
+    </qresource>
+</RCC>
