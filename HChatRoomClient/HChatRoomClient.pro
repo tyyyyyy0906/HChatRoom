@@ -14,14 +14,16 @@ SOURCES += \
     HChatDataBaseMgr.cpp \
     HChatRoomLogin.cpp \
     main.cpp \
-    HChatRoomClient.cpp
+    HChatRoomClient.cpp \
+    AppConfig.cpp
 
 HEADERS += \
     Global.h \
     HChatClientSocket.h \
     HChatDataBaseMgr.h \
     HChatRoomClient.h \
-    HChatRoomLogin.h
+    HChatRoomLogin.h \
+    AppConfig.h
 
 FORMS += \
     HChatRoomClient.ui \

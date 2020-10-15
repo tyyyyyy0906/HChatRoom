@@ -16,6 +16,10 @@ public:
     void connectServer(const QString& anyIPV4, const int& port);
     void disconnectServer();
 
+signals:
+    void uploadConnectStatus(const quint8& status);
+    void uploadCurrentMessage(const quint8& info, const QJsonValue& data);
+
 private:
     void checkLoginStatus(const QJsonValue& data);
     void checkUserOnline (const QJsonValue& data);

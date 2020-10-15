@@ -1,9 +1,13 @@
 #include "HChatClientSocket.h"
 #include "HChatDataBaseMgr.h"
 #include "Global.h"
+#include "AppConfig.h"
 
 #include <QDebug>
 #include <QJsonParseError>
+
+using namespace GlobalMessage;
+using namespace App;
 
 HChatClientSocket::HChatClientSocket(QObject *parent)
     : QObject(parent)
@@ -39,17 +43,18 @@ void HChatClientSocket::disconnectServer() {
 
 void HChatClientSocket::checkLoginStatus(const QJsonValue &data) {
     if (data.isObject()) {
-        QJsonObject info_= data.toObject();
-        QString strName  = info_.value("name").toString();
-        QString strPwd   = info_.value("passwd").toString();
-        QJsonObject obj_ = HChatDataBaseMgr::instance().loginCheck(strName, strPwd);
+        QJsonObject obj_ = data.toObject();
+        int code_        = obj_.value("code").toInt();
+        QString msg_     = obj_.value("msg" ).toString();
 
-        clientID_ = obj_.value("id").toInt();
-        qDebug() << "login" << obj_;
-
-        if (clientID_ > 0) Q_EMIT onNewUserConnected();
-        /// 发送查询结果至客户端
-        onMessageTransform(GlobalMessage::MessageGroup::ClientLogin, obj_);
+        if (0 == code_ && msg_ == "ok") {
+            clientID_ = obj_.value("id").toInt();
+            AppConfig::conID_ = clientID_;
+            Q_EMIT uploadConnectStatus(LoginStatus::LoginSuccess);
+        }
+        else if (-1 == code_){
+            Q_EMIT uploadConnectStatus(LoginStatus::LoginFailued);
+        }
     }
 }
 
@@ -113,14 +118,50 @@ void HChatClientSocket::checkFriendsMsg(const QByteArray &data) {
 
 void HChatClientSocket::onRecvTcpConnected() {
     Q_EMIT onNewUserConnected();
+    Q_EMIT uploadConnectStatus(LoginStatus::ConnectedToHost);
 }
 
 void HChatClientSocket::onRecvTcpDisconnted() {
     Q_EMIT onUserHasDisConnected();
+    Q_EMIT uploadConnectStatus(LoginStatus::DisConnectToHost);
 }
 
 void HChatClientSocket::onRecvTcpReadyReadData() {
-//    Q_EMIT onSendMessageToClient()
+    QByteArray byRead = client_->readAll();
+    QJsonParseError jsonError;
+    QJsonDocument doucment = QJsonDocument::fromJson(byRead, &jsonError);
+    if (!doucment.isNull() && (jsonError.error == QJsonParseError::NoError)) {
+        if (doucment.isObject()) {
+            QJsonObject obj_= doucment.object();
+            QJsonValue  val_= obj_.value("data");
+            int types_      = obj_.value("type").toInt();
+
+            switch (types_){
+            case MessageGroup::ClientRegister: break;
+            case MessageGroup::ClientLogin: checkLoginStatus(val_); break;
+            case MessageGroup::ClientUserOnLine:
+                Q_EMIT uploadCurrentMessage(MessageGroup::ClientUserOnLine, val_);
+                break;
+            case MessageGroup::ClientUserOffLine:
+                Q_EMIT uploadCurrentMessage(MessageGroup::ClientUserOffLine, val_);
+                break;
+            case MessageGroup::ClientLoginOut:
+                client_->abort();
+                break;
+            case MessageGroup::ClientSendMsg:
+                Q_EMIT uploadCurrentMessage(MessageGroup::ClientSendMsg, val_);
+                break;
+            case MessageGroup::ClientSendFile:
+                Q_EMIT uploadCurrentMessage(MessageGroup::ClientSendFile, val_);
+                break;
+            case MessageGroup::ClientSendPicture:
+                Q_EMIT uploadCurrentMessage(MessageGroup::ClientSendPicture, val_);
+                break;
+            default:
+                break;
+            }
+        }
+    }
 }
 
 void HChatClientSocket::onMessageTransform(const quint8 &type, const QJsonValue &value) {

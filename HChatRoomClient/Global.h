@@ -29,7 +29,7 @@ namespace GlobalMessage {
         ClientSendPicture
     };
 
-    static const QString server_Address_     = "192.168.10.25";
+    static const QString server_Address_     = "127.0.0.1";
     static const int     server_MessagePort_ = 66666;
     static const int     server_FilePort_    = 10001;
 

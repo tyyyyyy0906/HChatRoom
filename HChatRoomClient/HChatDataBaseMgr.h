@@ -27,30 +27,6 @@ public:
     ///
     void createTable();
     ///
-    /// \brief updateUserStatus
-    /// \param id
-    /// \param state
-    ///
-    void updateUserStatus(const int& id, const quint8& state);
-    ///
-    /// \brief getAllUserForTable
-    /// \return
-    ///
-    QJsonArray getAllUserForTable();
-    ///
-    /// \brief getUserOnlineStatus
-    /// \param id
-    /// \return
-    ///
-    int getUserOnlineStatus(const int& id) const;
-    ///
-    /// \brief loginCheck
-    /// \param name
-    /// \param passwd
-    /// \return
-    ///
-    QJsonObject loginCheck(const QString &name, const QString &passwd);
-    ///
     /// \brief initAllUser
     ///
     void initAllUser();

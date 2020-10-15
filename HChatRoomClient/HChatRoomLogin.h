@@ -22,6 +22,10 @@ public:
 private:
     void initWindow();
 
+private slots:
+    void recvClientSocketStatus(const quint8& status);
+    void onLoginButtonClicked();
+
 private:
     Ui::HChatRoomLogin *ui;
     HChatClientSocket  *client_;

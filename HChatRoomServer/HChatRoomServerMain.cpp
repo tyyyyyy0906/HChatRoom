@@ -86,7 +86,7 @@ HChatRoomServerMain::~HChatRoomServerMain() {
 }
 
 void HChatRoomServerMain::initHChatRoomServerWindowStyle() {
-    this->setWindowTitle(QStringLiteral("ChatRoom Server"));
+    this->setWindowTitle(QStringLiteral("服务器"));
     this->setFixedSize(410, 420);
     this->setWindowFlags(Qt::WindowMinimizeButtonHint | Qt::WindowCloseButtonHint);
 
