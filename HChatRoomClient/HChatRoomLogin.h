@@ -12,6 +12,7 @@ namespace Ui {
 class HChatRoomLogin;
 }
 
+class HChatRoomLogin_;
 class HChatRoomLogin : public QWidget
 {
     Q_OBJECT
@@ -29,6 +30,9 @@ private slots:
 private:
     Ui::HChatRoomLogin *ui;
     HChatClientSocket  *client_;
+
+    friend class HChatRoomLogin_;
+    HChatRoomLogin_ *p_;
 };
 
 #endif // HCHATROOMLOGIN_H

@@ -4,8 +4,7 @@
 #include <QObject>
 #include <QTcpSocket>
 
-class HChatClientSocket : public QObject
-{
+class HChatClientSocket : public QObject {
     Q_OBJECT
 public:
     explicit HChatClientSocket(QObject *parent = nullptr);
@@ -14,6 +13,7 @@ public:
     void closeSocket();
 
     void connectServer(const QString& anyIPV4, const int& port);
+    void connectServer(const QHostAddress &host, const int &port);
     void disconnectServer();
 
 signals:

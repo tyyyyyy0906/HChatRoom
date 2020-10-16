@@ -12,17 +12,24 @@ DESTDIR += $$PWD/dist
 #DEFINES += QT_DISABLE_DEPRECATED_BEFORE=0x060000    # disables all the APIs deprecated before Qt 6.0.0
 
 SOURCES += \
+    AppConfig.cpp \
+    HChatDataBaseMgr.cpp \
     HChatMessageNotify.cpp \
     HChatMessageNotifyManage.cpp \
-    HChatRoomDataBase.cpp \
+    HChatServer.cpp \
+    HChatServerSocket.cpp \
     main.cpp \
     HChatRoomServerMain.cpp
 
 HEADERS += \
+    AppConfig.h \
+    Global.h \
+    HChatDataBaseMgr.h \
     HChatMessageNotify.h \
     HChatMessageNotifyManage.h \
-    HChatRoomDataBase.h \
-    HChatRoomServerMain.h
+    HChatRoomServerMain.h \
+    HChatServer.h \
+    HChatServerSocket.h
 
 FORMS += \
     HChatRoomServerMain.ui

@@ -5,5 +5,8 @@
         <file>image/Menu/server_menu_delete.svg</file>
         <file>image/Menu/server_menu_selectall.svg</file>
         <file>image/Message/message_icon.png</file>
+        <file>image/TrayIcon/server_tray_icon.svg</file>
+        <file>image/TrayIcon/server_quit.svg</file>
+        <file>image/TrayIcon/server_tray_show.svg</file>
     </qresource>
 </RCC>

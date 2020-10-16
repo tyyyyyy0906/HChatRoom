@@ -2,6 +2,7 @@
 
 #include "HChatRoomServerMain.h"
 #include "ui_HChatRoomServerMain.h"
+#include "HChatServer.h"
 
 #include <QEvent>
 #include <QMouseEvent>
@@ -18,16 +19,17 @@
 #include <QVector>
 #include <QTextEdit>
 #include <QMenu>
+#include <QSystemTrayIcon>
+
+#define SYSTEMTIME QString(QDateTime::currentDateTime().toString("yyyy.MM.dd hh:mm:ss ddd"))
 
 class HChatRoomServerMain_ {
 public:
-    HChatRoomServerMain *this_  = Q_NULLPTR;
-    QTcpServer          *server_= Q_NULLPTR;
-    QTcpSocket          *socket_= Q_NULLPTR;
-
-    QList<QTcpSocket *> mClientList;
-
     int listernPort = 66666;
+
+    HChatMsgServer  *messageServer = Q_NULLPTR;
+    HChatFileServer *sendFileServer= Q_NULLPTR;
+    QSystemTrayIcon *systemTrayIcon= Q_NULLPTR;
 };
 
 HChatRoomServerMain::HChatRoomServerMain(QWidget *parent)
@@ -36,16 +38,14 @@ HChatRoomServerMain::HChatRoomServerMain(QWidget *parent)
     , s_(new HChatRoomServerMain_) {
 
     ui->setupUi(this);
-
-    s_->this_   = this;
-    s_->server_ = new QTcpServer(this);
-    s_->socket_ = new QTcpSocket(this);
+    s_->messageServer = new HChatMsgServer (this);
+    s_->sendFileServer= new HChatFileServer(this);
+    s_->systemTrayIcon= new QSystemTrayIcon(this);
 
     this->initHChatRoomServerWindowStyle();
 
     /// ui控件关联slote
     connect(ui->serverStartButton, SIGNAL(clicked()), this, SLOT(onStartServerButton()));
-    connect(ui->serverSendButton , SIGNAL(clicked()), this, SLOT(onSendMessageToClient()));
     connect(ui->serverPortEdit   , QOverload<int>::of(&QSpinBox::valueChanged), [=](int i) {
         s_->listernPort = i; qDebug("current port changed\t%d", i);
     });
@@ -77,7 +77,7 @@ HChatRoomServerMain::HChatRoomServerMain(QWidget *parent)
     });
 
     /// socket关联slote
-    connect(s_->server_, SIGNAL(newConnection()),this, SLOT(onNewConnection()));
+//    connect(s_->server_, SIGNAL(newConnection()),this, SLOT(onNewConnection()));
 }
 
 HChatRoomServerMain::~HChatRoomServerMain() {
@@ -96,89 +96,30 @@ void HChatRoomServerMain::initHChatRoomServerWindowStyle() {
     ui->serverConnectMsgEdit->setReadOnly(true);
     ui->serverConnectMsgEdit->setContextMenuPolicy(Qt::CustomContextMenu);
 
+    s_->systemTrayIcon->setIcon(QIcon(":/Server/image/TrayIcon/server_tray_icon.svg"));
+    QMenu *tray_ = new QMenu(this);
+    tray_->addAction(QIcon(":/Server/image/TrayIcon/server_tray_show.svg"), tr("显示"));
+    tray_->addAction(QIcon(":/Server/image/TrayIcon/server_quit.svg"     ), tr("退出"));
+    s_->systemTrayIcon->setContextMenu(tray_);
+    s_->systemTrayIcon->show();
+
+    connect(tray_, &QMenu::triggered, [this](QAction* a) {
+        if (a->text() == "退出") {
+            s_->messageServer->closeListen();
+            qApp->quit();
+        } else if (a->text() == "显示") this->show();
+    });
+
     scanAllAddressForDevice();
 }
 
 void HChatRoomServerMain::onStartServerButton(void) {
-    QHostAddress serverAddress = QHostAddress(ui->serverAddressList->currentText());
+    bool message_ = s_->messageServer->startListen(66666);
+    ui->serverConnectMsgEdit->append(messageConcat(QString(message_ ? "消息端口监听成功" : "消息端口监听失败")));
 
-    if (s_->server_->isListening()) {
-        s_->server_->close();
-        ui->serverStartButton->setText(QStringLiteral("开启服务"));
-        QString msg_ = QString(QDateTime::currentDateTime().toString("yyyy.MM.dd hh:mm:ss ddd")) + ":[Server]:\n" + QString("服务关闭");
-        ui->serverConnectMsgEdit->append(msg_);
-        ui->serverPortEdit->setEnabled(true);
-        ui->serverAddressList->setEnabled(true);
-        ui->serverSendButton->setEnabled(false);
-        return;
-    }
-    else {
-        if (s_->server_->listen(QHostAddress::AnyIPv4, s_->listernPort)) {
-            ui->serverStartButton->setText(QStringLiteral("关闭服务"));
-            ui->serverPortEdit->setEnabled(false);
-            ui->serverAddressList->setEnabled(false);
-            ui->serverSendButton->setEnabled(true);
-            QString msg_ = QString(QDateTime::currentDateTime().toString("yyyy.MM.dd hh:mm:ss ddd")) + "[Server]:\n" + QString("服务开启");
-            ui->serverConnectMsgEdit->append(msg_);
-            qDebug() << "listen success!!!";
-        } else {
-            QMessageBox::warning(this, "Server Listen Error", s_->server_->errorString());
-        }
-    }
-}
-
-void HChatRoomServerMain::onNewConnection() {
-    QString clientInfo;
-    s_->socket_ = s_->server_->nextPendingConnection();
-    s_->mClientList.append(s_->socket_);
-
-    clientInfo = s_->socket_->peerAddress().toString() + ":" +  QString::number(s_->socket_->peerPort());
-    ui->serverConnectClient->addItem(clientInfo);
-
-    connect(s_->socket_, SIGNAL(readyRead())   , this, SLOT(onReadyReadData()));
-    connect(s_->socket_, SIGNAL(disconnected()), this, SLOT(onClientDisconnect()));
-}
-
-void HChatRoomServerMain::onClientDisconnect() {
-    QMessageBox::information(this, "client close Signal", "client over");
-}
-
-void HChatRoomServerMain::onReadyReadData() {
-    QByteArray recvArray;
-    QTcpSocket* current = nullptr;
-    if (!s_->mClientList.isEmpty()) {
-        for(int index = 0; index < s_->mClientList.count(); index ++) {
-            current = s_->mClientList.at(index);
-            if (current->isReadable()) {
-                recvArray = current->readAll();
-                if (recvArray.isEmpty()) continue;
-                QString str = QString(QDateTime::currentDateTime().toString("yyyy.MM.dd hh:mm:ss ddd")) +
-                                      "[Client]:\n" + str.fromLocal8Bit(recvArray.data());
-                ui->serverConnectMsgEdit->append(str);
-                break;
-            }
-        }
-        for (int index = 0; index < s_->mClientList.count(); index++) {
-            QTcpSocket* temp = s_->mClientList.at(index);
-            if (current == temp) continue;
-            if (temp->isWritable()) temp->write(recvArray);
-        }
-    }
-}
-
-void HChatRoomServerMain::onSendMessageToClient() {
-    QString sendString = ui->serverSendEdit->text();
-    QByteArray sendArr = sendString.toLocal8Bit();
-
-    if (!s_->mClientList.isEmpty()) {
-        for(int index = 0;index < s_->mClientList.count();index ++) {
-            QTcpSocket* temp = s_->mClientList.at(index);
-            if (temp->isWritable()) temp->write(sendArr);
-        }
-    }
-    QString str = QString(QDateTime::currentDateTime().toString("yyyy.MM.dd hh:mm:ss ddd")) + "[Server]:\n" + sendString;
-    ui->serverConnectMsgEdit->append(str);
-    ui->serverSendEdit->clear();
+    connect(s_->messageServer, &HChatMsgServer::signalUserStatus, s_->messageServer, [&](const QString& data) {
+        ui->serverConnectMsgEdit->append(messageConcat(data));
+    });
 }
 
 void HChatRoomServerMain::scanAllAddressForDevice() {
@@ -191,14 +132,27 @@ void HChatRoomServerMain::scanAllAddressForDevice() {
     }
 }
 
+QString HChatRoomServerMain::messageConcat(const QString &context) const {
+    return SYSTEMTIME + QString("[ Server ] :") + context;
+}
+
 bool HChatRoomServerMain::eventFilter(QObject *watched, QEvent *evt) {
     QKeyEvent   *keys_ = static_cast<QKeyEvent *>(evt);
     quint32      type_ = static_cast<quint32>(evt->type());
     if (type_ == QEvent::KeyPress && keys_->key() == Qt::Key_Return) {
-        if (watched == ui->serverSendEdit && s_->server_->isListening()) {
-            onSendMessageToClient();
-            return true;
-        }
+//        if (watched == ui->serverSendEdit && s_->server_->isListening()) {
+//            onSendMessageToClient();
+//            return true;
+//        }
     }
     return QWidget::eventFilter(watched, evt);
+}
+
+void HChatRoomServerMain::closeEvent(QCloseEvent *e) {
+#if 1
+    this->hide();
+    e->ignore();
+#else
+    QWidget::closeEvent(e);
+#endif
 }

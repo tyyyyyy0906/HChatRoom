@@ -1,4 +1,6 @@
 #include "HChatRoomServerMain.h"
+#include "HChatDataBaseMgr.h"
+#include "AppConfig.h"
 
 #include <QApplication>
 #include <QTextCodec>
@@ -20,6 +22,8 @@ int main(int argc, char *argv[])
 #else
     QTextCodec::setCodecForLocale(QTextCodec::codecForName("UTF-8"));
 #endif
+    App::AppConfig::initAppConfig(a.applicationDirPath());
+    HChatDataBaseMgr::instance().openChatDataBase(App::AppConfig::conAppDataBasePath + "info.db");
 
     HChatRoomServerMain w;
     w.show();

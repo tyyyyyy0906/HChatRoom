@@ -5,6 +5,8 @@
 
 #include <QDebug>
 #include <QJsonParseError>
+#include <QJsonDocument>
+#include <QJsonObject>
 
 using namespace GlobalMessage;
 using namespace App;
@@ -37,11 +39,18 @@ void HChatClientSocket::connectServer(const QString& anyIPV4, const int& port) {
     }
 }
 
+void HChatClientSocket::connectServer(const QHostAddress &anyIPV4, const int &port) {
+    if (client_->state() == QAbstractSocket::UnconnectedState) {
+        client_->connectToHost(anyIPV4, static_cast<quint16>(port));
+    }
+}
+
 void HChatClientSocket::disconnectServer() {
 
 }
 
 void HChatClientSocket::checkLoginStatus(const QJsonValue &data) {
+    qDebug() << "[HChatClientSocket][checkLoginStatus]：接收服务端分发登录状态消息 = " << data ;
     if (data.isObject()) {
         QJsonObject obj_ = data.toObject();
         int code_        = obj_.value("code").toInt();
@@ -49,6 +58,7 @@ void HChatClientSocket::checkLoginStatus(const QJsonValue &data) {
 
         if (0 == code_ && msg_ == "ok") {
             clientID_ = obj_.value("id").toInt();
+            qDebug() << "current Login id = " << clientID_;
             AppConfig::conID_ = clientID_;
             Q_EMIT uploadConnectStatus(LoginStatus::LoginSuccess);
         }
@@ -59,41 +69,41 @@ void HChatClientSocket::checkLoginStatus(const QJsonValue &data) {
 }
 
 void HChatClientSocket::checkUserOnline(const QJsonValue &data) {
-    if (data.isArray()) {
-        QJsonArray arr_ = data.toArray();
-        for (int i = 0; i < arr_.size(); ++i) {
-            int id_     = arr_.at(i).toInt();
-            int status_ = HChatDataBaseMgr::instance().getUserOnlineStatus(id_);
-            /// 给在线的好友通报一下状态
-            if (GlobalMessage::LoginStatus::ClientOnline == status_) {
-                QJsonObject obj_;
-                obj_.insert("id", clientID_);
-                obj_.insert("text", "online");
-                Q_EMIT onSendMessageToClient(GlobalMessage::MessageGroup::ClientUserOnLine, id_, obj_);
-            }
-        }
-    }
+//    if (data.isArray()) {
+//        QJsonArray arr_ = data.toArray();
+//        for (int i = 0; i < arr_.size(); ++i) {
+//            int id_     = arr_.at(i).toInt();
+//            int status_ = HChatDataBaseMgr::instance().getUserOnlineStatus(id_);
+//            /// 给在线的好友通报一下状态
+//            if (GlobalMessage::LoginStatus::ClientOnline == status_) {
+//                QJsonObject obj_;
+//                obj_.insert("id", clientID_);
+//                obj_.insert("text", "online");
+//                Q_EMIT onSendMessageToClient(GlobalMessage::MessageGroup::ClientUserOnLine, id_, obj_);
+//            }
+//        }
+//    }
 }
 
 void HChatClientSocket::checkUserOffline(const QJsonValue &data) {
-    if (data.isObject()) {
-        QJsonObject obj_ = data.toObject();
-        QJsonArray arr_  = obj_.value("friends").toArray();
-        int userID_      = obj_.value("id").toInt();
-        HChatDataBaseMgr::instance().updateUserStatus(userID_, GlobalMessage::LoginStatus::ClientOffline);
+//    if (data.isObject()) {
+//        QJsonObject obj_ = data.toObject();
+//        QJsonArray arr_  = obj_.value("friends").toArray();
+//        int userID_      = obj_.value("id").toInt();
+//        HChatDataBaseMgr::instance().updateUserStatus(userID_, GlobalMessage::LoginStatus::ClientOffline);
 
-        for (int i = 0; i < arr_.size(); ++i) {
-            userID_ = arr_.at(i).toInt();
-            int status_ = HChatDataBaseMgr::instance().getUserOnlineStatus(userID_);
-            /// 给在线的好友通报一下状态
-            if (GlobalMessage::LoginStatus::ClientOnline == status_) {
-                QJsonObject info_;
-                info_.insert("id", clientID_);
-                info_.insert("text", "offline");
-                Q_EMIT onSendMessageToClient(GlobalMessage::MessageGroup::ClientUserOffLine, userID_, info_);
-            }
-        }
-    }
+//        for (int i = 0; i < arr_.size(); ++i) {
+//            userID_ = arr_.at(i).toInt();
+//            int status_ = HChatDataBaseMgr::instance().getUserOnlineStatus(userID_);
+//            /// 给在线的好友通报一下状态
+//            if (GlobalMessage::LoginStatus::ClientOnline == status_) {
+//                QJsonObject info_;
+//                info_.insert("id", clientID_);
+//                info_.insert("text", "offline");
+//                Q_EMIT onSendMessageToClient(GlobalMessage::MessageGroup::ClientUserOffLine, userID_, info_);
+//            }
+//        }
+//    }
 }
 
 ///
@@ -126,7 +136,12 @@ void HChatClientSocket::onRecvTcpDisconnted() {
     Q_EMIT uploadConnectStatus(LoginStatus::DisConnectToHost);
 }
 
+///
+/// \brief HChatClientSocket::onRecvTcpReadyReadData
+/// \brief 读取服务端发送的数据请求
+///
 void HChatClientSocket::onRecvTcpReadyReadData() {
+    qDebug() << "[HChatClientSocket][onRecvTcpReadyReadData]：接收服务端分发状态";
     QByteArray byRead = client_->readAll();
     QJsonParseError jsonError;
     QJsonDocument doucment = QJsonDocument::fromJson(byRead, &jsonError);
@@ -135,6 +150,8 @@ void HChatClientSocket::onRecvTcpReadyReadData() {
             QJsonObject obj_= doucment.object();
             QJsonValue  val_= obj_.value("data");
             int types_      = obj_.value("type").toInt();
+
+            qDebug() << "[HChatClientSocket][onRecvTcpReadyReadData]：data = " << val_ << types_;
 
             switch (types_){
             case MessageGroup::ClientRegister: break;
@@ -165,5 +182,19 @@ void HChatClientSocket::onRecvTcpReadyReadData() {
 }
 
 void HChatClientSocket::onMessageTransform(const quint8 &type, const QJsonValue &value) {
+    qDebug() << "接受到要转发的消息 type = " << type;
+    if (!client_->isOpen()) {
+        client_->connectToHost(AppConfig::conServerAddress, AppConfig::conServerMsgPort);
+        client_->waitForConnected(1000);
+    }
+    if (!client_->isOpen()) return;
 
+    QJsonObject obj_;
+    obj_.insert("type", type);
+    obj_.insert("from", clientID_);
+    obj_.insert("data", value);
+
+    QJsonDocument document;
+    document.setObject(obj_);
+    client_->write(document.toJson(QJsonDocument::Compact));
 }

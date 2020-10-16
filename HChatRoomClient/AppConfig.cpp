@@ -51,3 +51,20 @@ void AppConfig::updateConfig(const QString& key, const QVariant& value) {
     Q_UNUSED(key)
     Q_UNUSED(value)
 }
+
+void AppConfig::saveConfig() {
+    QSettings settings(conIniFilePath, QSettings::IniFormat);
+
+    settings.beginGroup("userConfig");
+    settings.setValue("userName", conUserName);
+    settings.setValue("passWord", conPassWord);
+    settings.endGroup();
+
+    /*其他配置*/
+    settings.beginGroup("Server");
+    settings.setValue("serverAddress" , conServerAddress);
+    settings.setValue("serverMsgPort" , conServerMsgPort);
+    settings.setValue("serverFilePort", conServerFilePort);
+    settings.endGroup();
+    settings.sync();
+}

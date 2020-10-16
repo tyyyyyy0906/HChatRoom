@@ -30,6 +30,7 @@ public:
     static void creatorConfig();
     static void readConfig();
     static void updateConfig(const QString& key, const QVariant& value);
+    static void saveConfig();
 };
 } // namespace App
 

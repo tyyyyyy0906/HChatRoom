@@ -5,8 +5,13 @@
 
 #include <QWidget>
 #include <QMessageBox>
+#include <QCloseEvent>
+#include "HChatServer.h"
 
 class HChatRoomServerMain_;
+
+class HChatMsgServer;
+class HChatFileServer;
 
 QT_BEGIN_NAMESPACE
 namespace Ui { class HChatRoomServerMain; }
@@ -35,6 +40,7 @@ protected:
     /// \return
     ///
     bool eventFilter(QObject *watched, QEvent *evt) override;
+    void closeEvent (QCloseEvent *e) override;
 private:
     ///
     /// \brief scanAllAddressForDevice
@@ -42,29 +48,14 @@ private:
     ///
     void scanAllAddressForDevice();
 
+    QString messageConcat(const QString& context) const;
+
 private slots:
     ///
     /// \brief onMenuCloseButton
     /// \brief 开启服务槽函数
     ///
     void onStartServerButton(void);
-    ///
-    /// \brief onNewConnection
-    ///
-    void onNewConnection();
-    ///
-    /// \brief onClientDisconnect
-    ///
-    void onClientDisconnect();
-    ///
-    /// \brief onReadyReadData
-    ///
-    void onReadyReadData();
-    ///
-    /// \brief onSendMessageToClient
-    ///
-    void onSendMessageToClient();
-
 private:
     Ui::HChatRoomServerMain *ui;
     friend class HChatRoomServerMain_;

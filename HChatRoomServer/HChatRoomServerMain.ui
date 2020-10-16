@@ -150,9 +150,15 @@
      <widget class="QTextEdit" name="serverConnectMsgEdit">
       <property name="font">
        <font>
-        <family>微软雅黑</family>
+        <family>宋体</family>
         <pointsize>10</pointsize>
        </font>
+      </property>
+      <property name="styleSheet">
+       <string notr="true"/>
+      </property>
+      <property name="readOnly">
+       <bool>false</bool>
       </property>
      </widget>
     </item>
