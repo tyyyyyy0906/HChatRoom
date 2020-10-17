@@ -37,10 +37,7 @@ void HChatRoomLogin::initWindow() {
     this->setFixedSize(327, 407);
     this->setWindowTitle(QStringLiteral("聊天室"));
     this->installEventFilter(this);
-    ui->clientPasswdEdit->setEchoMode(QLineEdit::Password);
-
-
-//    IconHelper::Instance->setIcon(, QChar())
+    ui->clientPasswdEdit->setEchoMode(QLineEdit::Password);  
 
     connect(ui->clientLoginButton, SIGNAL(clicked()), this, SLOT(onLoginButtonClicked()));
 }

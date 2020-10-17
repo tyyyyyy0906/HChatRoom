@@ -174,6 +174,10 @@ void HChatClientSocket::onRecvTcpReadyReadData() {
             case MessageGroup::ClientSendPicture:
                 Q_EMIT uploadCurrentMessage(MessageGroup::ClientSendPicture, val_);
                 break;
+            case MessageGroup::ServerSendMsg:
+                qDebug() << "接收服务器广播分发的消息" << val_;
+                Q_EMIT uploadCurrentMessage(types_, val_);
+                break;
             default:
                 break;
             }
@@ -182,7 +186,7 @@ void HChatClientSocket::onRecvTcpReadyReadData() {
 }
 
 void HChatClientSocket::onMessageTransform(const quint8 &type, const QJsonValue &value) {
-    qDebug() << "接受到要转发的消息 type = " << type;
+    qDebug() << "[HChatClientSocket][onMessageTransform]: 接受到要转发的消息 type = " << type << clientID_ << value;
     if (!client_->isOpen()) {
         client_->connectToHost(AppConfig::conServerAddress, AppConfig::conServerMsgPort);
         client_->waitForConnected(1000);
@@ -193,6 +197,8 @@ void HChatClientSocket::onMessageTransform(const quint8 &type, const QJsonValue 
     obj_.insert("type", type);
     obj_.insert("from", clientID_);
     obj_.insert("data", value);
+
+    qDebug() << "[HChatClientSocket::onMessageTransform] 数据组装的结果 = " << obj_;
 
     QJsonDocument document;
     document.setObject(obj_);

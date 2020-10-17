@@ -125,9 +125,9 @@
    <property name="geometry">
     <rect>
      <x>10</x>
-     <y>400</y>
-     <width>341</width>
-     <height>26</height>
+     <y>385</y>
+     <width>331</width>
+     <height>51</height>
     </rect>
    </property>
    <property name="font">
@@ -152,7 +152,7 @@
     </font>
    </property>
    <property name="styleSheet">
-    <string notr="true"/>
+    <string notr="true">selection-background-color: rgb(85, 170, 255);</string>
    </property>
    <property name="readOnly">
     <bool>false</bool>
@@ -167,9 +167,16 @@
      <height>301</height>
     </rect>
    </property>
+   <property name="styleSheet">
+    <string notr="true">color: rgb(255, 255, 255);
+selection-background-color: rgb(85, 85, 127);</string>
+   </property>
    <item>
     <property name="text">
      <string>客户端上线列表</string>
+    </property>
+    <property name="flags">
+     <set>NoItemFlags</set>
     </property>
    </item>
   </widget>

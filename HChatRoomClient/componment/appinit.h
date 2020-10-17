@@ -3,8 +3,7 @@
 
 #include <QObject>
 
-class AppInit : public QObject
-{
+class AppInit : public QObject {
     Q_OBJECT
 public:
     static AppInit *Instance();

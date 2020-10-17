@@ -2,14 +2,12 @@
 #define APPCONFIG_H
 
 #include <QObject>
-#include <QApplication>
 #include <QSettings>
 #include <QVariant>
 #include <QFile>
 #include <QWidget>
 
 namespace App {
-class QApplication;
 class AppConfig {
 public:
     static QString conAppInstallPath;   // 应用程序路径

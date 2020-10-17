@@ -23,6 +23,7 @@ void AppConfig::initAppConfig(const QString &installPath) {
     conConfigFilePath = conAppInstallPath + "Config/";
     conRecordsPath    = conAppInstallPath + "Records/";
     conIniFilePath    = conAppInstallPath + "Ini/";
+    installEmoji();
 }
 
 void AppConfig::creatorConfig() {
@@ -78,4 +79,29 @@ void AppConfig::installStyle(QWidget *w) {
         w->setStyleSheet(qss);
         file.close();
     }
+}
+
+void AppConfig::installEmoji() {
+    QFontDatabase fontDB;
+    fontDB.addApplicationFont(":/emoji.ttf");
+}
+
+void AppConfig::stringToHtmlFilter(QString &context) {
+    context.replace("&" , "&amp;");
+    context.replace(">" , "&gt;");
+    context.replace("<" , "&lt;");
+    context.replace("\"", "&quot;");
+    context.replace("\'", "&#39;");
+    context.replace(" " , "&nbsp;");
+    context.replace("\n", "<br>");
+    context.replace("\r", "<br>");
+}
+
+void AppConfig::stringToHtml(QString &context, QColor color) {
+    QByteArray array;
+    context.append(color.red());
+    context.append(color.green());
+    context.append(color.blue());
+    QString s_(array.toHex());
+    context = QString("<span style=\" color:#%1;\">%2</span>").arg(s_).arg(context);
 }

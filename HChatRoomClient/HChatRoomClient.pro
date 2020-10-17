@@ -39,7 +39,8 @@ FORMS += \
 
 RESOURCES += \
     $$PWD/qss/style.qrc \
-    $$PWD/ttf/ttf.qrc
+    $$PWD/ttf/ttf.qrc   \
+    $$PWD/image/image.qrc
 
 # Default rules for deployment.
 qnx: target.path = /tmp/$${TARGET}/bin

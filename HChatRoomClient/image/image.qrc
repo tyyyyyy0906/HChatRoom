@@ -1,0 +1,7 @@
+<RCC>
+    <qresource prefix="/">
+        <file>Menu/server_menu_copy.svg</file>
+        <file>Menu/server_menu_delete.svg</file>
+        <file>Menu/server_menu_selectall.svg</file>
+    </qresource>
+</RCC>

@@ -27,6 +27,38 @@ void HChatServer::closeListen() {
     managerServer_->close();
 }
 
+bool HChatServer::hasListen() const {
+    return managerServer_->isListening();
+}
+
+///
+/// \brief HChatServer::transformMessageHasBeListen
+/// \param type
+/// \param data
+///  转发此消息给服务端，用于监听客户端的消息。
+void HChatServer::transformMessageHasBeListen(const quint8& type, const QString& name, const QJsonValue &data) {
+    qDebug() << "[HChatServer::transformMessageHasBeListen] 转发监听消息" << type << data.toString() << (int)data.type();
+    int type_ = static_cast<int>(data.type());
+    switch(type_) {
+    case QJsonValue::Null:
+        break;
+    case QJsonValue::String:
+        if (type == MessageGroup::ClientSendMsg) {
+            qDebug() << "signalListenClientStatus = " << data.toString();
+            emit signalListenClientStatus(name, data.toString());
+        }
+        break;
+    case QJsonValue::Bool:
+        break;
+    case QJsonValue::Array:
+        break;
+    case QJsonValue::Object:
+        break;
+    default:
+        break;
+    }
+}
+
 
 HChatMsgServer::HChatMsgServer(QObject *parent) {
 
@@ -36,6 +68,23 @@ HChatMsgServer::~HChatMsgServer() {
 
 }
 
+///
+/// \brief HChatMsgServer::transMessageToAllClient
+/// \param type
+/// \param data
+/// \\\广播服务消息给所有在线客户端
+void HChatMsgServer::transMessageToAllClient(const quint8 &type, const QJsonValue &data) {
+    qDebug() << "[HChatMsgServer::transMessageToAllClient] 广播服务消息内容 = " << data.toString();
+    for (auto it : m_clients) {
+        it->replyMessageToClient(type, data);
+    }
+}
+
+///
+/// \brief HChatMsgServer::transFileToClient
+/// \param userId
+/// \param json
+/// \\\ 分发消息给指定客户端
 void HChatMsgServer::transFileToClient(const int &userId, const QJsonValue &json) {
     for (int i = 0; i < m_clients.size(); i++) {
         if (userId == m_clients.at(i)->userClienID()) {
@@ -85,6 +134,10 @@ void HChatMsgServer::disConnected() {
 }
 
 void HChatMsgServer::msgToClient(const quint8 &type, const int &id, const QJsonValue &date) {
+    qDebug() << "[HChatMsgServer::msgToClient]: 消息转发 = " << date << date.toString();
+    QString userName = HChatDataBaseMgr::instance().getUserName(id);
+    transformMessageHasBeListen(type, userName, date);
+
     for (int i = 0; i < m_clients.size(); i++) {
         if (id == m_clients.at(i)->userClienID()) {
             m_clients.at(i)->replyMessageToClient(type, date);
@@ -93,7 +146,15 @@ void HChatMsgServer::msgToClient(const quint8 &type, const int &id, const QJsonV
     }
 }
 
-HChatFileServer::HChatFileServer(QObject *parent) {}
+///
+/// \brief HChatMsgServer::msgToAllClient
+/// \param data
+/// \\\ 群发给所有客户端
+void HChatMsgServer::msgToAllClient(const quint8 &type, const QJsonValue &data) {
+
+}
+
+HChatFileServer::HChatFileServer(QObject */*parent*/) {}
 HChatFileServer::~HChatFileServer() {
     foreach (HChatClientFileSocket *client,  m_clients) {
         m_clients.removeOne(client);

@@ -5,6 +5,7 @@
 
 #include <QJsonParseError>
 #include <QDataStream>
+#include <QJsonDocument>
 
 using namespace GlobalMessage;
 using namespace App;
@@ -41,7 +42,7 @@ void HChatServerSocket::closeSocketServer() {
 }
 
 void HChatServerSocket::replyMessageToClient(const quint8 &type, const QJsonValue &data) {
-    qDebug() << "[HChatServerSocket][replyMessageToClient]：转发消息给请求的客户端";
+    qDebug() << "[HChatServerSocket][replyMessageToClient]：转发消息给请求的客户端" << type << data;
     if (!socket_->isOpen()) {
         qDebug() << "[HChatServerSocket][replyMessageToClient]：服务器未开启";
         return;
@@ -51,6 +52,7 @@ void HChatServerSocket::replyMessageToClient(const quint8 &type, const QJsonValu
     info_.insert("from", id_ );
     info_.insert("data", data);
 
+    qDebug() << "[HChatServerSocket][replyMessageToClient]: 数据组装结构" << info_;
     // 将数据发给指定客户端
      QJsonDocument document;
      document.setObject(info_);
@@ -126,7 +128,7 @@ void HChatServerSocket::onRecvTcpReadyReadData() {
 }
 
 
-void HChatServerSocket::dealClientRegister(const QJsonValue &data) { }
+void HChatServerSocket::dealClientRegister(const QJsonValue &/*data*/) { }
 
 ///
 /// \brief HChatServerSocket::dealClientLogin
@@ -163,10 +165,20 @@ void HChatServerSocket::dealClientOnline(const QJsonValue &data) {
 }
 
 void HChatServerSocket::dealReplyClientMsg(const QByteArray &data) {
-
+    qDebug() << "[HChatServerSocket][dealReplyClientMsg] 解析客户端发送的消息" << data;
+    QJsonParseError error_;
+    QJsonDocument document = QJsonDocument::fromJson(data, &error_);
+    if (document.isNull() || error_.error != QJsonParseError::NoError) return;
+    if (document.isObject()) {
+        QJsonObject ob_  = document.object();
+        int type_        = ob_.value("type").toInt();
+        QJsonValue data_ = ob_.value("data");
+        int id_          = ob_.value("from").toInt();
+        qDebug() << "[HChatServerSocket][dealReplyClientMsg] 解析数据结果 = "
+                 << ob_ << type_ << data_ << id_;
+        Q_EMIT tcpTransformMsgToClient(type_, id_, data_);
+    }
 }
-
-
 
 HChatClientFileSocket::HChatClientFileSocket(QObject *parent, QTcpSocket *tcpSocket) {
     loadSize         = 50 * 1024;

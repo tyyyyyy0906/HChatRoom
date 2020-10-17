@@ -1,5 +1,7 @@
 <RCC>
     <qresource prefix="/">
         <file>fontawesome-webfont.ttf</file>
+        <file>emoji.ttf</file>
+        <file>iconfont.ttf</file>
     </qresource>
 </RCC>

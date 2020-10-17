@@ -191,6 +191,7 @@ image:url(:/qss/psblack/checkbox_unchecked_disable.png);
 
 QCheckBox::indicator:checked,QGroupBox::indicator:checked,QTreeWidget::indicator:checked,QListWidget::indicator:checked{
 image:url(:/qss/psblack/checkbox_checked.png);
+background-color: gray;
 }
 
 QCheckBox::indicator:checked:disabled,QGroupBox::indicator:checked:disabled,QTreeWidget::indicator:checked:disabled,QListWidget::indicator:checked:disabled{

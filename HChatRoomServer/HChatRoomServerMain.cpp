@@ -52,6 +52,7 @@ HChatRoomServerMain::HChatRoomServerMain(QWidget *parent)
 
     /// ui控件关联slote
     connect(ui->serverStartButton, SIGNAL(clicked()), this, SLOT(onStartServerButton()));
+    connect(ui->serverSendButton , SIGNAL(clicked()), this, SLOT(onSendMessageToClient()));
     connect(ui->serverPortEdit   , QOverload<int>::of(&QSpinBox::valueChanged), [=](int i) {
         s_->listernPort = i; qDebug("current port changed\t%d", i);
     });
@@ -99,6 +100,7 @@ void HChatRoomServerMain::initHChatRoomServerWindowStyle() {
 
     ui->serverSendButton->setText(QStringLiteral("发送"));
     ui->serverSendButton->setEnabled(false);
+    ui->serverSendEdit  ->setEnabled(false);
     ui->serverSendEdit  ->installEventFilter(this);
     ui->serverConnectMsgEdit->setReadOnly(true);
     ui->serverConnectMsgEdit->setContextMenuPolicy(Qt::CustomContextMenu);
@@ -118,6 +120,16 @@ void HChatRoomServerMain::initHChatRoomServerWindowStyle() {
         } else if (a->text() == "显示") this->show();
     });
 
+
+    connectSignal();
+    scanAllAddressForDevice();
+}
+
+void HChatRoomServerMain::connectSignal() {
+    connect(s_->messageServer, &HChatMsgServer::signalListenClientStatus, [&](const QString& name, const QJsonValue& data) {
+        QString info_ = messageConcat("Client" ,QString("用户%1: ").arg(name) + data.toString());
+        ui->serverConnectMsgEdit->append(info_);
+    });
     connect(s_->messageServer, &HChatMsgServer::signalCurrentUserStatus, [&](const QString& name, const quint8& op) {
         if (op == MessageGroup::ClientUserOnLine) {
             ui->serverConnectClient->addItem(name);
@@ -131,17 +143,33 @@ void HChatRoomServerMain::initHChatRoomServerWindowStyle() {
             }
         }
     });
-
-    scanAllAddressForDevice();
 }
 
 void HChatRoomServerMain::onStartServerButton(void) {
-    bool message_ = s_->messageServer->startListen(66666);
+    bool message_ = s_->messageServer ->startListen(66666);
+    bool file_    = s_->sendFileServer->startListen(66667);
     ui->serverConnectMsgEdit->append(messageConcat(QString(message_ ? "消息端口监听成功" : "消息端口监听失败")));
+    ui->serverConnectMsgEdit->append(messageConcat(QString(file_    ? "文件端口监听成功" : "文件端口监听失败")));
+
+    if (message_ && file_) {
+        ui->serverSendButton ->setEnabled(true);
+        ui->serverSendEdit   ->setEnabled(true);
+    }
 
     connect(s_->messageServer, &HChatMsgServer::signalUserStatus, s_->messageServer, [&](const QString& data) {
         ui->serverConnectMsgEdit->append(messageConcat(data));
     });
+}
+
+///
+/// \brief HChatRoomServerMain::onSendMessageToClient
+/// \\\ 广播服务消息给所有客户端
+void HChatRoomServerMain::onSendMessageToClient() {
+    QString data_ = ui->serverSendEdit->text();
+    ui->serverConnectMsgEdit->append(messageConcat(data_.isEmpty() ? "" : data_));
+    s_->messageServer->transMessageToAllClient(MessageGroup::ServerSendMsg, data_);
+    ui->serverSendEdit->clear();
+
 }
 
 void HChatRoomServerMain::scanAllAddressForDevice() {
@@ -154,18 +182,20 @@ void HChatRoomServerMain::scanAllAddressForDevice() {
     }
 }
 
-QString HChatRoomServerMain::messageConcat(const QString &context) const {
-    return SYSTEMTIME + QString("[ Server ] :") + context;
+QString HChatRoomServerMain::messageConcat(QString device, QString context) const {
+    return SYSTEMTIME + QString("[ %1 ] :").arg(device) + context;
 }
 
 bool HChatRoomServerMain::eventFilter(QObject *watched, QEvent *evt) {
     QKeyEvent   *keys_ = static_cast<QKeyEvent *>(evt);
     quint32      type_ = static_cast<quint32>(evt->type());
     if (type_ == QEvent::KeyPress && keys_->key() == Qt::Key_Return) {
-//        if (watched == ui->serverSendEdit && s_->server_->isListening()) {
-//            onSendMessageToClient();
-//            return true;
-//        }
+        if (watched == ui->serverSendEdit  &&
+            s_->messageServer ->hasListen()&&
+            s_->sendFileServer->hasListen()) {
+            onSendMessageToClient();
+            return true;
+        }
     }
     return QWidget::eventFilter(watched, evt);
 }

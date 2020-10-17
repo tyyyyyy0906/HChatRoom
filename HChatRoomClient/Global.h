@@ -27,6 +27,7 @@ namespace GlobalMessage {
         ClientSendMsg    = 0x40,
         ClientSendFile,
         ClientSendPicture,
+        ServerSendMsg,
 
         DownLoadFile     = 0x65,
         DOwnLoadImage,

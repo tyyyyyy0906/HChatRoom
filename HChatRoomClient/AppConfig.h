@@ -7,6 +7,8 @@
 #include <QVariant>
 #include <QFile>
 #include <QWidget>
+#include <QFontDatabase>
+#include <QColor>
 
 namespace App {
 class QApplication;
@@ -33,6 +35,9 @@ public:
     static void updateConfig(const QString& key, const QVariant& value);
     static void saveConfig();
     static void installStyle(QWidget* w);
+    static void installEmoji();
+    static void stringToHtmlFilter(QString& context);
+    static void stringToHtml(QString& context, QColor color);
 };
 } // namespace App
 

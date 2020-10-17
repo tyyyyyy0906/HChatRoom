@@ -25,12 +25,21 @@ public:
 protected:
     void timerEvent(QTimerEvent *event) override;
     void closeEvent(QCloseEvent *event) override;
+    bool eventFilter(QObject *watched, QEvent *event) override;
+
+private:
+    QString messageConcat  (QString context = "", QString device = "Client") const;
+    void parseServerMessage(const QJsonValue& data);
 
 private slots:
     void recvMessage(const int& id_, const QJsonValue& data);
     void recvTcpReply(const quint8& type, const QJsonValue& data);
     void recvTcpStatus();
+    void onSendMessageButtonClicked();
 
+    void onSendImageMessage();
+    void onSendFileMessage ();
+    void onChangedFontSize ();
 private:
     Ui::HChatRoomClient *ui;
     friend class HChatRoomClient_;

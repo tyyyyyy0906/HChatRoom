@@ -48,7 +48,8 @@ private:
     ///
     void scanAllAddressForDevice();
 
-    QString messageConcat(const QString& context) const;
+    QString messageConcat(QString device = "Server", QString context = "") const;
+    void    connectSignal();
 
 private slots:
     ///
@@ -56,6 +57,10 @@ private slots:
     /// \brief 开启服务槽函数
     ///
     void onStartServerButton(void);
+    void onSendMessageToClient(void);
+
+signals:
+    void bordercastAllClient(const quint8& type, const QJsonValue& data);
 private:
     Ui::HChatRoomServerMain *ui;
     friend class HChatRoomServerMain_;

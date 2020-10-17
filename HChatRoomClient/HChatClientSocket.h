@@ -17,7 +17,7 @@ public:
     void disconnectServer();
 
 signals:
-    void uploadConnectStatus(const quint8& status);
+    void uploadConnectStatus (const quint8& status);
     void uploadCurrentMessage(const quint8& info, const QJsonValue& data);
 
 private:
