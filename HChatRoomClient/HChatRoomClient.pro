@@ -15,7 +15,9 @@ SOURCES += \
     HChatRoomLogin.cpp \
     main.cpp \
     HChatRoomClient.cpp \
-    AppConfig.cpp
+    AppConfig.cpp \
+    $$PWD/componment/appinit.cpp \
+    $$PWD/componment/iconhelper.cpp
 
 HEADERS += \
     Global.h \
@@ -23,11 +25,21 @@ HEADERS += \
     HChatDataBaseMgr.h \
     HChatRoomClient.h \
     HChatRoomLogin.h \
-    AppConfig.h
+    AppConfig.h \
+    $$PWD/componment/appinit.h \
+    $$PWD/componment/iconhelper.h
+
+INCLUDEPATH += \
+    . \
+    $$PWD/componment
 
 FORMS += \
     HChatRoomClient.ui \
     HChatRoomLogin.ui
+
+RESOURCES += \
+    $$PWD/qss/style.qrc \
+    $$PWD/ttf/ttf.qrc
 
 # Default rules for deployment.
 qnx: target.path = /tmp/$${TARGET}/bin

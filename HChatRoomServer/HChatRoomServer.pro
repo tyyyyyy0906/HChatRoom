@@ -35,7 +35,8 @@ FORMS += \
     HChatRoomServerMain.ui
 
 RESOURCES += \
-    Image.qrc
+    Image.qrc \
+    $$PWD/qss/style.qrc
 
 # Default rules for deployment.
 qnx: target.path = /tmp/$${TARGET}/bin

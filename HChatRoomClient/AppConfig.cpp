@@ -68,3 +68,14 @@ void AppConfig::saveConfig() {
     settings.endGroup();
     settings.sync();
 }
+
+void AppConfig::installStyle(QWidget *w) {
+    QFile file(":/white.qss");
+    if (file.open(QFile::ReadOnly)) {
+        QString qss = QLatin1String(file.readAll());
+        QString paletteColor = qss.mid(20, 7);
+        w->setPalette(QPalette(QColor(paletteColor)));
+        w->setStyleSheet(qss);
+        file.close();
+    }
+}

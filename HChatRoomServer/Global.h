@@ -29,7 +29,9 @@ namespace GlobalMessage {
         ClientSendPicture,
 
         DownLoadFile     = 0x65,
-        DOwnLoadImage
+        DOwnLoadImage,
+
+        RequsetAllFriends= 0x70
     };
 
     static const QString server_Address_     = "127.0.0.1";

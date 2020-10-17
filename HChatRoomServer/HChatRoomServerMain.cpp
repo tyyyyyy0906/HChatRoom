@@ -1,8 +1,10 @@
 // (author: sjxnhjp@gmail.com)
 
 #include "HChatRoomServerMain.h"
-#include "ui_HChatRoomServerMain.h"
 #include "HChatServer.h"
+#include "AppConfig.h"
+#include "Global.h"
+#include "ui_HChatRoomServerMain.h"
 
 #include <QEvent>
 #include <QMouseEvent>
@@ -20,6 +22,10 @@
 #include <QTextEdit>
 #include <QMenu>
 #include <QSystemTrayIcon>
+#include <QApplication>
+
+using namespace App;
+using namespace GlobalMessage;
 
 #define SYSTEMTIME QString(QDateTime::currentDateTime().toString("yyyy.MM.dd hh:mm:ss ddd"))
 
@@ -69,6 +75,7 @@ HChatRoomServerMain::HChatRoomServerMain(QWidget *parent)
             ui->serverConnectMsgEdit->selectAll();
         });
 
+        AppConfig::installStyle(menu);
         menu->addAction(copy_ );
         menu->addAction(clear_);
         menu->addAction(select_All);
@@ -87,7 +94,7 @@ HChatRoomServerMain::~HChatRoomServerMain() {
 
 void HChatRoomServerMain::initHChatRoomServerWindowStyle() {
     this->setWindowTitle(QStringLiteral("服务器"));
-    this->setFixedSize(410, 420);
+    this->setFixedSize(520, 440);
     this->setWindowFlags(Qt::WindowMinimizeButtonHint | Qt::WindowCloseButtonHint);
 
     ui->serverSendButton->setText(QStringLiteral("发送"));
@@ -95,6 +102,7 @@ void HChatRoomServerMain::initHChatRoomServerWindowStyle() {
     ui->serverSendEdit  ->installEventFilter(this);
     ui->serverConnectMsgEdit->setReadOnly(true);
     ui->serverConnectMsgEdit->setContextMenuPolicy(Qt::CustomContextMenu);
+    ui->serverConnectClient ->item(0)->setSelected(false);
 
     s_->systemTrayIcon->setIcon(QIcon(":/Server/image/TrayIcon/server_tray_icon.svg"));
     QMenu *tray_ = new QMenu(this);
@@ -108,6 +116,20 @@ void HChatRoomServerMain::initHChatRoomServerWindowStyle() {
             s_->messageServer->closeListen();
             qApp->quit();
         } else if (a->text() == "显示") this->show();
+    });
+
+    connect(s_->messageServer, &HChatMsgServer::signalCurrentUserStatus, [&](const QString& name, const quint8& op) {
+        if (op == MessageGroup::ClientUserOnLine) {
+            ui->serverConnectClient->addItem(name);
+        } else if (op == MessageGroup::ClientUserOffLine) {
+            for (int i = 0; i < ui->serverConnectClient->count(); i++) {
+                if (ui->serverConnectClient->item(i)->text() == name) {
+                    QListWidgetItem *item = ui->serverConnectClient->takeItem(i);
+                    delete item;
+                    break;
+                }
+            }
+        }
     });
 
     scanAllAddressForDevice();

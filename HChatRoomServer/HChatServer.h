@@ -21,6 +21,7 @@ public:
 signals:
     void signalUserStatus(const QString &text);
     void signalClientInfo(const QString &addrss_, const QString &port_, const int &client_);
+    void signalCurrentUserStatus(const QString& name, const quint8& op);
 protected:
     QTcpServer *managerServer_;
     HChatMessageNotifyManage* p_;

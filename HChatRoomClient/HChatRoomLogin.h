@@ -23,6 +23,8 @@ public:
 private:
     void initWindow();
 
+protected:
+    bool eventFilter(QObject *watched, QEvent *event) override;
 private slots:
     void recvClientSocketStatus(const quint8& status);
     void onLoginButtonClicked();

@@ -58,9 +58,10 @@ void HChatMsgServer::connected() {
             this  , SLOT(msgToClient(quint8, int, QJsonValue)));
     connect(client, SIGNAL(tcpRecFile(QJsonValue)), this, SIGNAL(signalDownloadFile(QJsonValue)));
 
-    Q_EMIT signalUserStatus(QString("用户 [%1] 上线").arg(HChatDataBaseMgr::instance().getUserName(client->userClienID())));
-    p_->notify("新消息", QString("用户%1上线啦！").arg(HChatDataBaseMgr::instance().getUserName(client->userClienID())));
-    qDebug() << "当前用户IP和端口 = " << client->getClientAddress() << client->getClientPort();
+    QString userName = HChatDataBaseMgr::instance().getUserName(client->userClienID());
+    Q_EMIT signalUserStatus(QString("用户 [%1] 上线").arg(userName));
+    Q_EMIT signalCurrentUserStatus(userName, MessageGroup::ClientUserOnLine);
+    p_->notify("新消息", QString("用户%1上线啦！").arg(userName));
     m_clients.push_back(client);
 }
 
@@ -70,7 +71,9 @@ void HChatMsgServer::disConnected() {
     for (int i = 0; i < m_clients.size(); i++) {
         if (client == m_clients.at(i)) {
             m_clients.remove(i);
-            Q_EMIT signalUserStatus(QString("用户 [%1] 下线").arg(HChatDataBaseMgr::instance().getUserName(client->userClienID())));
+            QString userName = HChatDataBaseMgr::instance().getUserName(client->userClienID());
+            Q_EMIT signalUserStatus(QString("用户 [%1] 下线").arg(userName));
+            Q_EMIT signalCurrentUserStatus(userName, MessageGroup::ClientUserOffLine);
             return;
         }
     }

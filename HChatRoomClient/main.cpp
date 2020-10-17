@@ -1,6 +1,8 @@
 #include "HChatRoomLogin.h"
 #include "HChatDataBaseMgr.h"
 #include "AppConfig.h"
+#include "appinit.h"
+#include "iconhelper.h"
 
 #include <QApplication>
 #include <QTextCodec>
@@ -28,6 +30,10 @@ int main(int argc, char *argv[])
     App::AppConfig::initAppConfig(a.applicationDirPath());
     HChatDataBaseMgr::instance().openChatDataBase(App::AppConfig::conAppDataBasePath + "user.db");
     HChatRoomLogin w;
+    App::AppConfig::installStyle(&w);
+
+    AppInit::Instance()->start();
+
     w.show();
     return a.exec();
 }

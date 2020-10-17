@@ -3,6 +3,8 @@
 
 #include <QWidget>
 #include <QTimerEvent>
+#include <QCloseEvent>
+#include <QJsonObject>
 
 #include "HChatClientSocket.h"
 
@@ -21,12 +23,13 @@ public:
     void connectSocket(HChatClientSocket* socket, const QString& userName);
 
 protected:
-    void timerEvent(QTimerEvent *event);
+    void timerEvent(QTimerEvent *event) override;
+    void closeEvent(QCloseEvent *event) override;
 
 private slots:
     void recvMessage(const int& id_, const QJsonValue& data);
-    void recvTcpStatus();
     void recvTcpReply(const quint8& type, const QJsonValue& data);
+    void recvTcpStatus();
 
 private:
     Ui::HChatRoomClient *ui;

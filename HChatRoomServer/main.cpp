@@ -26,6 +26,9 @@ int main(int argc, char *argv[])
     HChatDataBaseMgr::instance().openChatDataBase(App::AppConfig::conAppDataBasePath + "info.db");
 
     HChatRoomServerMain w;
+
+    App::AppConfig::installStyle(&w);
+
     w.show();
     return a.exec();
 }

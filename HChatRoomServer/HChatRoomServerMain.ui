@@ -6,8 +6,8 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>410</width>
-    <height>420</height>
+    <width>520</width>
+    <height>440</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -16,42 +16,9 @@
   <widget class="QWidget" name="layoutWidget">
    <property name="geometry">
     <rect>
-     <x>10</x>
-     <y>390</y>
-     <width>391</width>
-     <height>27</height>
-    </rect>
-   </property>
-   <layout class="QHBoxLayout" name="horizontalLayout">
-    <item>
-     <widget class="QLineEdit" name="serverSendEdit">
-      <property name="font">
-       <font>
-        <family>微软雅黑</family>
-       </font>
-      </property>
-     </widget>
-    </item>
-    <item>
-     <widget class="QPushButton" name="serverSendButton">
-      <property name="font">
-       <font>
-        <family>微软雅黑</family>
-       </font>
-      </property>
-      <property name="text">
-       <string/>
-      </property>
-     </widget>
-    </item>
-   </layout>
-  </widget>
-  <widget class="QWidget" name="layoutWidget">
-   <property name="geometry">
-    <rect>
-     <x>10</x>
-     <y>0</y>
-     <width>391</width>
+     <x>9</x>
+     <y>8</y>
+     <width>511</width>
      <height>71</height>
     </rect>
    </property>
@@ -136,42 +103,75 @@
     </item>
    </layout>
   </widget>
-  <widget class="QWidget" name="layoutWidget">
+  <widget class="QPushButton" name="serverSendButton">
    <property name="geometry">
     <rect>
-     <x>1</x>
-     <y>71</y>
-     <width>520</width>
-     <height>311</height>
+     <x>358</x>
+     <y>399</y>
+     <width>151</width>
+     <height>29</height>
     </rect>
    </property>
-   <layout class="QHBoxLayout" name="horizontalLayout_2">
-    <item>
-     <widget class="QTextEdit" name="serverConnectMsgEdit">
-      <property name="font">
-       <font>
-        <family>宋体</family>
-        <pointsize>10</pointsize>
-       </font>
-      </property>
-      <property name="styleSheet">
-       <string notr="true"/>
-      </property>
-      <property name="readOnly">
-       <bool>false</bool>
-      </property>
-     </widget>
-    </item>
-    <item>
-     <widget class="QListWidget" name="serverConnectClient">
-      <item>
-       <property name="text">
-        <string>客户端上线列表</string>
-       </property>
-      </item>
-     </widget>
-    </item>
-   </layout>
+   <property name="font">
+    <font>
+     <family>微软雅黑</family>
+    </font>
+   </property>
+   <property name="text">
+    <string/>
+   </property>
+  </widget>
+  <widget class="QLineEdit" name="serverSendEdit">
+   <property name="geometry">
+    <rect>
+     <x>10</x>
+     <y>400</y>
+     <width>341</width>
+     <height>26</height>
+    </rect>
+   </property>
+   <property name="font">
+    <font>
+     <family>微软雅黑</family>
+    </font>
+   </property>
+  </widget>
+  <widget class="QTextEdit" name="serverConnectMsgEdit">
+   <property name="geometry">
+    <rect>
+     <x>2</x>
+     <y>79</y>
+     <width>341</width>
+     <height>301</height>
+    </rect>
+   </property>
+   <property name="font">
+    <font>
+     <family>宋体</family>
+     <pointsize>10</pointsize>
+    </font>
+   </property>
+   <property name="styleSheet">
+    <string notr="true"/>
+   </property>
+   <property name="readOnly">
+    <bool>false</bool>
+   </property>
+  </widget>
+  <widget class="QListWidget" name="serverConnectClient">
+   <property name="geometry">
+    <rect>
+     <x>349</x>
+     <y>79</y>
+     <width>171</width>
+     <height>301</height>
+    </rect>
+   </property>
+   <item>
+    <property name="text">
+     <string>客户端上线列表</string>
+    </property>
+   </item>
   </widget>
  </widget>
  <resources/>

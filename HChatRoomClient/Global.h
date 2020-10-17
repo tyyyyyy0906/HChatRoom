@@ -26,7 +26,12 @@ namespace GlobalMessage {
         // 消息状态
         ClientSendMsg    = 0x40,
         ClientSendFile,
-        ClientSendPicture
+        ClientSendPicture,
+
+        DownLoadFile     = 0x65,
+        DOwnLoadImage,
+
+        RequsetAllFriends= 0x70
     };
 
     static const QString server_Address_     = "127.0.0.1";

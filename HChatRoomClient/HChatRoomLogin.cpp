@@ -1,7 +1,8 @@
 #include "HChatRoomLogin.h"
 #include "AppConfig.h"
-#include "ui_HChatRoomLogin.h"
 #include "HChatRoomClient.h"
+#include "iconhelper.h"
+#include "ui_HChatRoomLogin.h"
 
 #include <QJsonObject>
 
@@ -33,10 +34,25 @@ HChatRoomLogin::~HChatRoomLogin() {
 
 void HChatRoomLogin::initWindow() {
     this->setWindowFlags(Qt::WindowMinimizeButtonHint | Qt::WindowCloseButtonHint);
-    this->setFixedSize(270, 329);
+    this->setFixedSize(327, 407);
     this->setWindowTitle(QStringLiteral("聊天室"));
+    this->installEventFilter(this);
+    ui->clientPasswdEdit->setEchoMode(QLineEdit::Password);
+
+
+//    IconHelper::Instance->setIcon(, QChar())
 
     connect(ui->clientLoginButton, SIGNAL(clicked()), this, SLOT(onLoginButtonClicked()));
+}
+
+bool HChatRoomLogin::eventFilter(QObject *watched, QEvent *event) {
+    QKeyEvent   *keys_ = static_cast<QKeyEvent *>(event);
+    quint32      type_ = static_cast<quint32>(event->type());
+    if (keys_->key() == Qt::Key_Return && watched == this) {
+        onLoginButtonClicked();
+        return true;
+    }
+    return QWidget::eventFilter(watched, event);
 }
 
 ///

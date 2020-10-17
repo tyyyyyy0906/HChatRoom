@@ -6,6 +6,7 @@
 #include <QSettings>
 #include <QVariant>
 #include <QFile>
+#include <QWidget>
 
 namespace App {
 class QApplication;
@@ -32,6 +33,7 @@ public:
     static void creatorConfig();
     static void readConfig();
     static void updateConfig(const QString& key, const QVariant& value);
+    static void installStyle(QWidget* w);
 };
 } // namespace App
 
