@@ -46,8 +46,8 @@ bool HChatDataBaseMgr::openChatDataBase(const QString &dataBaseName) {
     query.exec("CREATE TABLE USERHEAD (id INT PRIMARY KEY, name varchar(20), data varchar)");
 
     query.exec("INSERT INTO USERINFO VALUES(1, 'admin', '123456', '2.bmp', 0, 1, '');");
-    query.exec("INSERT INTO USERINFO VALUES(2, 'userA', '123456', '1.bmp', 0, 1, '');");
-    query.exec("INSERT INTO USERINFO VALUES(3, 'userB', '123456', '1.bmp', 0, 1, '');");
+    query.exec("INSERT INTO USERINFO VALUES(2, 'zhangsan', '123456', '1.bmp', 0, 1, '');");
+    query.exec("INSERT INTO USERINFO VALUES(3, 'lisi', '123456', '1.bmp', 0, 1, '');");
 
     initAllUserStatus();
 
@@ -109,6 +109,34 @@ QString HChatDataBaseMgr::getUserName(const int &id) const {
     }
     return QString("");
 }
+
+QJsonObject HChatDataBaseMgr::getFriends() {
+    QJsonObject info_;
+    QSqlQuery sql_("SELECT * FROM USERINFO ORDER BY id;");
+
+    int id_, status;
+    QString  name;
+    while(sql_.next()) {
+        id_    = sql_.value("id"    ).toInt();
+        status = sql_.value("status").toInt();
+        name   = sql_.value("name"  ).toString();
+
+        if (name == "admin") continue;
+        QJsonArray user;
+        user << id_ << status <<name;
+        info_.insert(name, user);
+    }
+    return info_;
+}
+
+int HChatDataBaseMgr::userOnLineStatus(const int &id) const {
+    QString sql_ = "SELECT [status] FROM USERINFO ";
+    sql_.append("WHERE id=");
+    sql_.append(QString::number(id));
+    QSqlQuery query(sql_);
+    if (query.next()) { return query.value(0).toInt(); }
+    return -1;
+ }
 
 void HChatDataBaseMgr::initAllUserStatus() {
     QSqlQuery query("SELECT * FROM USERINFO ORDER BY id;");

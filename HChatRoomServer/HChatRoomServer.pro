@@ -27,6 +27,7 @@ HEADERS += \
     HChatDataBaseMgr.h \
     HChatMessageNotify.h \
     HChatMessageNotifyManage.h \
+    HChatRoomLog.h \
     HChatRoomServerMain.h \
     HChatServer.h \
     HChatServerSocket.h

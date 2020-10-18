@@ -6,6 +6,7 @@
 #include <QSqlError>
 #include <QSqlQuery>
 #include <QJsonObject>
+#include <QJsonArray>
 
 class HChatDataBaseMgr_;
 class HChatDataBaseMgr : public QObject {
@@ -19,6 +20,9 @@ public:
 
     QJsonObject checkUserInfoLogin(const QString& userName, const QString& passwd);
     QString     getUserName(const int &id) const;
+    QJsonObject getFriends();
+
+    int userOnLineStatus(const int &id) const;
 
 private:
     explicit HChatDataBaseMgr(QObject *parent = 0);

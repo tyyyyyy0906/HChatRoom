@@ -36,7 +36,6 @@ HChatDataBaseMgr &HChatDataBaseMgr::instance(void) {
 }
 
 bool HChatDataBaseMgr::openChatDataBase(const QString &dataBaseName) {
-    qDebug() << "current database path = " << dataBaseName;
     p_->userInfo_ = QSqlDatabase::addDatabase("QSQLITE");
     p_->userInfo_.setDatabaseName(dataBaseName);
     p_->userInfo_.setUserName("root");
@@ -59,7 +58,7 @@ void HChatDataBaseMgr::createTable() {
     /// userInfo table
     query.exec("CREATE TABLE FRIEND (id INT, userId INT, name varchar(50))");
 
-    // 用户数据保存
+    /// 用户数据保存
     query.exec("CREATE TABLE USERINFO (id INT, name varchar(50), passwd varchar(50))");
 //    /// 插入两个用户数据(admin)
 //    query.exec("INSERT INTO USERINFO VALUES(1, 'admin'   , '123456');");
@@ -68,8 +67,26 @@ void HChatDataBaseMgr::createTable() {
 }
 
 void HChatDataBaseMgr::initAllUser() {
-//    QSqlQuery query("SELECT * FROM USERINFO ORDER BY id;");
-//    while (query.next()) {
+    QSqlQuery query("SELECT * FROM USERINFO ORDER BY id;");
+    while (query.next()) {
 //        updateUserStatus(query.value(0).toInt(), GlobalMessage::LoginStatus::ClientOffline);
-//    }
+    }
+}
+
+///
+/// \brief HChatDataBaseMgr::getFriends
+/// \param id
+/// \return
+/// \\\ 查询数据库中的好友
+QJsonArray HChatDataBaseMgr::getFriends(const int &id) {
+    QJsonArray friends;
+    QString sql_ = "SELECT [id] FROM FRIEND ";
+    sql_.append("WHERE userId=");
+    sql_.append(QString::number(id));
+    QSqlQuery query(sql_, p_->userInfo_);
+    while (query.next()) {
+        friends.append(query.value("id").toInt());
+    }
+    qDebug() << "[HChatDataBaseMgr::getFriends] 好友数 = " << friends;
+    return friends;
 }

@@ -29,30 +29,23 @@ SOFTWARE.
 #include "qwidget.h"
 
 AppInit *AppInit::self = nullptr;
-AppInit *AppInit::Instance()
-{
-    if (!self)
-    {
+AppInit *AppInit::Instance() {
+    if (!self) {
         QMutex mutex;
         QMutexLocker locker(&mutex);
-        if (!self)
-        {
+        if (!self) {
             self = new AppInit;
         }
     }
-
     return self;
 }
 
-AppInit::AppInit(QObject *parent) : QObject(parent)
-{
+AppInit::AppInit(QObject *parent) : QObject(parent) {
 }
 
-bool AppInit::eventFilter(QObject *obj, QEvent *evt)
-{
+bool AppInit::eventFilter(QObject *obj, QEvent *evt) {
     QWidget *w = (QWidget *)obj;
-    if (!w->property("canMove").toBool())
-    {
+    if (!w->property("canMove").toBool()) {
         return QObject::eventFilter(obj, evt);
     }
 
@@ -60,26 +53,21 @@ bool AppInit::eventFilter(QObject *obj, QEvent *evt)
     static bool mousePressed = false;
 
     QMouseEvent *event = static_cast<QMouseEvent *>(evt);
-    if (event->type() == QEvent::MouseButtonPress)
-    {
-        if (event->button() == Qt::LeftButton)
-        {
+    if (event->type() == QEvent::MouseButtonPress) {
+        if (event->button() == Qt::LeftButton) {
             mousePressed = true;
             mousePoint = event->globalPos() - w->pos();
             return true;
         }
     }
 
-    else if (event->type() == QEvent::MouseButtonRelease)
-    {
+    else if (event->type() == QEvent::MouseButtonRelease) {
         mousePressed = false;
         return true;
     }
 
-    else if (event->type() == QEvent::MouseMove)
-    {
-        if (mousePressed && (event->buttons() && Qt::LeftButton))
-        {
+    else if (event->type() == QEvent::MouseMove) {
+        if (mousePressed && (event->buttons() == Qt::LeftButton)) {
             w->move(event->globalPos() - mousePoint);
             return true;
         }
@@ -88,7 +76,6 @@ bool AppInit::eventFilter(QObject *obj, QEvent *evt)
     return QObject::eventFilter(obj, evt);
 }
 
-void AppInit::start()
-{
+void AppInit::start() {
     qApp->installEventFilter(this);
 }

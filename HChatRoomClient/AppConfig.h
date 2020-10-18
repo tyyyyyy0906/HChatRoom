@@ -11,7 +11,6 @@
 #include <QColor>
 
 namespace App {
-class QApplication;
 class AppConfig {
 public:
     static QString conAppInstallPath;   // 应用程序路径
@@ -19,6 +18,7 @@ public:
     static QString conAppDataBasePath;  // 数据库目录
     static QString conConfigFilePath;   // 配置目录
     static QString conRecordsPath;      // 记录配置
+    static QString conRecvFilePath;     // 文件路径
     static QString conIniFilePath;      // 配置ini
     static QString conServerAddress;    // 服务器地址
     static int     conServerMsgPort;    // 消息端口

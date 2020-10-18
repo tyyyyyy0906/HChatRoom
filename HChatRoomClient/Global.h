@@ -35,6 +35,12 @@ namespace GlobalMessage {
         RequsetAllFriends= 0x70
     };
 
+    typedef enum {
+        Text,           // 普通文字消息
+        Picture,        // 图片消息
+        Files,          // 文件传输
+    } MessageType;
+
     static const QString server_Address_     = "127.0.0.1";
     static const int     server_MessagePort_ = 66666;
     static const int     server_FilePort_    = 10001;

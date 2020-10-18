@@ -1,9 +1,11 @@
 #include "HChatServer.h"
 #include "HChatServerSocket.h"
 #include "Global.h"
+#include "AppConfig.h"
 #include "HChatDataBaseMgr.h"
 
 using namespace GlobalMessage;
+using namespace App;
 
 HChatServer::HChatServer(QObject *parent)
     : QObject(parent)
@@ -108,6 +110,7 @@ void HChatMsgServer::connected() {
     connect(client, SIGNAL(tcpRecFile(QJsonValue)), this, SIGNAL(signalDownloadFile(QJsonValue)));
 
     QString userName = HChatDataBaseMgr::instance().getUserName(client->userClienID());
+//    HChatDataBaseMgr::instance().updateClientStatus(MessageGroup::ClientUserOnLine, client->userClienID());
     Q_EMIT signalUserStatus(QString("用户 [%1] 上线").arg(userName));
     Q_EMIT signalCurrentUserStatus(userName, MessageGroup::ClientUserOnLine);
     p_->notify("新消息", QString("用户%1上线啦！").arg(userName));
@@ -118,9 +121,12 @@ void HChatMsgServer::disConnected() {
     HChatServerSocket *client = (HChatServerSocket *)this->sender();
     if (NULL == client) return;
     for (int i = 0; i < m_clients.size(); i++) {
-        if (client == m_clients.at(i)) {
+        if (client == m_clients[i]) {
             m_clients.remove(i);
             QString userName = HChatDataBaseMgr::instance().getUserName(client->userClienID());
+//            HChatDataBaseMgr::instance().updateClientStatus(MessageGroup::ClientUserOffLine, m_clients[i]->userClienID());
+            p_->notify("新消息", QString("用户%1下线啦！").arg(userName));
+            transMessageToAllClient(MessageGroup::RequsetAllFriends, {});
             Q_EMIT signalUserStatus(QString("用户 [%1] 下线").arg(userName));
             Q_EMIT signalCurrentUserStatus(userName, MessageGroup::ClientUserOffLine);
             return;
@@ -133,14 +139,22 @@ void HChatMsgServer::disConnected() {
     disconnect(client, SIGNAL(tcpRecFile(QJsonValue)), this, SIGNAL(signalDownloadFile(QJsonValue)));
 }
 
+///
+/// \brief HChatMsgServer::msgToClient
+/// \param type
+/// \param id
+/// \param date
+/// \\\ 转发消息到对应客户端
 void HChatMsgServer::msgToClient(const quint8 &type, const int &id, const QJsonValue &date) {
-    qDebug() << "[HChatMsgServer::msgToClient]: 消息转发 = " << date << date.toString();
-    QString userName = HChatDataBaseMgr::instance().getUserName(id);
-    transformMessageHasBeListen(type, userName, date);
+    qDebug() << "[HChatMsgServer::msgToClient]: 消息转发 = " << date << id;
+    QString userName = HChatDataBaseMgr::instance().getUserName(AppConfig::conID_);
+    transformMessageHasBeListen(type, userName, date.toObject().value("msg").toString());
 
     for (int i = 0; i < m_clients.size(); i++) {
-        if (id == m_clients.at(i)->userClienID()) {
-            m_clients.at(i)->replyMessageToClient(type, date);
+        qDebug() << "要发送的客户端id = " << m_clients[i]->userClienID() << id;
+        if (id == m_clients[i]->userClienID()) {
+            qDebug() << "要发送的实例" << id << m_clients[i]->userClienID() << date;
+            m_clients[i]->replyMessageToClient(type, date);
             return;
         }
     }

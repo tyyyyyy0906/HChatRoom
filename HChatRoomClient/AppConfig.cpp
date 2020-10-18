@@ -8,6 +8,7 @@ QString AppConfig::conAppDataBasePath = "";
 QString AppConfig::conConfigFilePath  = "";
 QString AppConfig::conRecordsPath     = "";
 QString AppConfig::conIniFilePath     = "";
+QString AppConfig::conRecvFilePath    = "";
 QString AppConfig::conServerAddress   = "127.0.0.1";
 QString AppConfig::conUserName        = "zhangsan";
 QString AppConfig::conPassWord        = "123456";
@@ -23,6 +24,7 @@ void AppConfig::initAppConfig(const QString &installPath) {
     conConfigFilePath = conAppInstallPath + "Config/";
     conRecordsPath    = conAppInstallPath + "Records/";
     conIniFilePath    = conAppInstallPath + "Ini/";
+    conRecvFilePath   = conAppInstallPath + "File/";
     installEmoji();
 }
 

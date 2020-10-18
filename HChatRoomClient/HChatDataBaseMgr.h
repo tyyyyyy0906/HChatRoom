@@ -30,6 +30,11 @@ public:
     /// \brief initAllUser
     ///
     void initAllUser();
+    ///
+    /// \brief getFriends
+    /// \param id
+    ///
+    QJsonArray getFriends(const int& id);
 
 private:
     explicit HChatDataBaseMgr(QObject *parent = 0);

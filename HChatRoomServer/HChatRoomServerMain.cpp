@@ -154,6 +154,9 @@ void HChatRoomServerMain::onStartServerButton(void) {
     if (message_ && file_) {
         ui->serverSendButton ->setEnabled(true);
         ui->serverSendEdit   ->setEnabled(true);
+        ui->serverStartButton->setText("关闭服务");
+    } else {
+
     }
 
     connect(s_->messageServer, &HChatMsgServer::signalUserStatus, s_->messageServer, [&](const QString& data) {

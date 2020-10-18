@@ -21,9 +21,7 @@ HChatServerSocket::HChatServerSocket(QObject *parent, QTcpSocket *tcpSocket)
     connect(socket_, SIGNAL(readyRead())   , this, SLOT(onRecvTcpReadyReadData()));
 }
 
-HChatServerSocket::~HChatServerSocket() {
-
-}
+HChatServerSocket::~HChatServerSocket() { }
 
 int HChatServerSocket::userClienID() const {
     return id_;
@@ -52,11 +50,10 @@ void HChatServerSocket::replyMessageToClient(const quint8 &type, const QJsonValu
     info_.insert("from", id_ );
     info_.insert("data", data);
 
-    qDebug() << "[HChatServerSocket][replyMessageToClient]: 数据组装结构" << info_;
-    // 将数据发给指定客户端
-     QJsonDocument document;
-     document.setObject(info_);
-     socket_->write(document.toJson(QJsonDocument::Compact));
+    qDebug() << "[HChatServerSocket][replyMessageToClient]: 数据组装Json" << info_;
+    QJsonDocument document;
+    document.setObject(info_);
+    socket_->write(document.toJson(QJsonDocument::Compact));
 }
 
 void HChatServerSocket::onRecvTcpConnected() {
@@ -72,13 +69,12 @@ void HChatServerSocket::onRecvTcpDisconnect() {
 }
 
 void HChatServerSocket::onRecvTcpReadyReadData() {
-    qDebug() << "准备接收到客户端的数据";
+    qDebug() << "[HChatServerSocket::onRecvTcpReadyReadData] 准备处理接收到客户端的数据";
     QByteArray reply = socket_->readAll();
     QJsonParseError jsonError;
     QJsonDocument doucment = QJsonDocument::fromJson(reply, &jsonError);
     if (!doucment.isNull() && (jsonError.error == QJsonParseError::NoError)) {
         if (doucment.isObject()) {
-            // 转化为对象
             QJsonObject obj_= doucment.object();
             int type_       = obj_.value("type").toInt();
             QJsonValue data = obj_.value("data");
@@ -86,39 +82,38 @@ void HChatServerSocket::onRecvTcpReadyReadData() {
             qDebug() << "[HChatServerSocket][onRecvTcpReadyReadData]：接收客户端的数据 = " << type_ << data;
 
             switch (type_) {
-            case MessageGroup::ClientRegister: {
-                /// 处理注册（未添加）
+            case MessageGroup::ClientRegister:
+                /// 处理注册（功能未开放）
                 qDebug("处理客户端注册");
                 dealClientRegister(data);
-            }
                 break;
-            case MessageGroup::ClientLogin: {
+            case MessageGroup::ClientLogin:
                 qDebug("处理客户端登录");
                 dealClientLogin(data);
-            }
                 break;
-            case MessageGroup::ClientUserOnLine: {
+            case MessageGroup::ClientUserOnLine:
                 qDebug("处理客户端上线");
                 dealClientOnline(data);
-            }
                 break;
-            case MessageGroup::ClientLoginOut: {
+            case MessageGroup::ClientLoginOut:
                 qDebug("处理客户端下线");
                 dealClientLoginOut(data);
                 Q_EMIT tcpDisconnected();
-                socket_->abort();
-            }
                 break;
             case MessageGroup::ClientSendMsg:
-            case MessageGroup::ClientSendFile:
-            case MessageGroup::ClientSendPicture: {
                 qDebug("处理客户端消息");
                 dealReplyClientMsg(reply);
-            }
                 break;
-            case MessageGroup::DownLoadFile : {
+            case MessageGroup::ClientSendFile:
+                break;
+            case MessageGroup::ClientSendPicture:
+                dealClientPicture(reply);
+                break;
+            case MessageGroup::DownLoadFile:
                 Q_EMIT tcpRecFile(data);
-            }
+                break;
+            case MessageGroup::RequsetAllFriends:
+                dealRequsetFriends(data);
                 break;
             default:
                 break;
@@ -145,11 +140,8 @@ void HChatServerSocket::dealClientLogin(const QJsonValue &data) {
 
         qDebug() << "[HChatServerSocket][dealClientLogin]：处理客户端的登录请求数据："
                  << "userName = " << userName << "userPassWd = " << userPassWd;
-
         info_ = HChatDataBaseMgr::instance().checkUserInfoLogin(userName, userPassWd);
-
         qDebug() << "[HChatServerSocket][dealClientLogin]: 查询数据结果 = " << info_;
-
         id_ = info_.value("id").toInt();
         if (id_ > 0) Q_EMIT tcpConnected();
         replyMessageToClient(MessageGroup::ClientLogin, info_);
@@ -157,11 +149,38 @@ void HChatServerSocket::dealClientLogin(const QJsonValue &data) {
 }
 
 void HChatServerSocket::dealClientLoginOut(const QJsonValue &data) {
-
+    if (data.isObject()) {
+        QJsonObject obj_ = data.toObject();
+        QJsonArray array = obj_.value("friends").toArray();
+        int          nId = obj_.value("id").toInt();
+        HChatDataBaseMgr::instance().updateClientStatus(nId, MessageGroup::ClientUserOffLine);
+        for (int i = 0; i < array.size(); ++i) {
+            nId = array.at(i).toInt();
+            int nStatus = HChatDataBaseMgr::instance().userOnLineStatus(nId);
+            if (MessageGroup::ClientUserOnLine == nStatus) {
+                QJsonObject info_;
+                info_.insert("id", id_);
+                info_.insert("text", "offline");
+                Q_EMIT tcpTransformMsgToClient(MessageGroup::ClientUserOffLine, nId, info_);
+            }
+        }
+    }
 }
 
 void HChatServerSocket::dealClientOnline(const QJsonValue &data) {
-
+    if (data.isArray()) {
+        QJsonArray array_ = data.toArray();
+        for (int i = 0; i < array_.size(); ++i) {
+            int nID = array_[i].toInt();
+            int nStatus = HChatDataBaseMgr::instance().userOnLineStatus(nID);
+            if (MessageGroup::ClientUserOnLine == nStatus) {
+                QJsonObject ob_;
+                ob_.insert("id", nID);
+                ob_.insert("text", "online");
+                Q_EMIT tcpTransformMsgToClient(MessageGroup::ClientUserOnLine, nID, ob_);
+            }
+        }
+    }
 }
 
 void HChatServerSocket::dealReplyClientMsg(const QByteArray &data) {
@@ -172,11 +191,53 @@ void HChatServerSocket::dealReplyClientMsg(const QByteArray &data) {
     if (document.isObject()) {
         QJsonObject ob_  = document.object();
         int type_        = ob_.value("type").toInt();
-        QJsonValue data_ = ob_.value("data");
-        int id_          = ob_.value("from").toInt();
+        QJsonObject data_= ob_.value("data").toObject();
+        int cid_         = ob_.value("from").toInt();
+        int from_        = ob_.value("to").toInt();
+
+        AppConfig::conID_= cid_;
+
+        QString message_ = data_.value("msg").toString();
+        QString sender_  = data_.value("sender").toString();
+
+        QJsonObject info = {
+            { "msg"   , message_ },
+            { "sender", sender_  }
+        };
+        int     target_  = data_.value("to").toInt();
+
         qDebug() << "[HChatServerSocket][dealReplyClientMsg] 解析数据结果 = "
-                 << ob_ << type_ << data_ << id_;
-        Q_EMIT tcpTransformMsgToClient(type_, id_, data_);
+                 << ob_ << type_ << message_ << cid_ << from_ << target_;
+        Q_EMIT tcpTransformMsgToClient(MessageGroup::ClientSendMsg, target_, info);
+    }
+}
+
+void HChatServerSocket::dealRequsetFriends(const QJsonValue &data) {
+    qDebug() << "[HChatServerSocket::dealRequsetFriends] 处理好友请求 = " << data;
+    QJsonObject info_ = data.toObject();
+    int clientId_   = info_.value("from").toInt();
+    int msgTypes_   = info_.value("type").toInt();
+    Q_UNUSED(clientId_)
+    Q_UNUSED(msgTypes_)
+    QString userName= info_.value("data").toString();
+    QJsonObject userInfo_ = HChatDataBaseMgr::instance().getFriends();
+    replyMessageToClient(MessageGroup::RequsetAllFriends, userInfo_);
+}
+
+void HChatServerSocket::dealClientPicture(const QByteArray &data) {
+    qDebug() << "[HChatServerSocket][dealClientPicture] 解析客户端发送的图片消息" << data;
+    QJsonParseError error_;
+    QJsonDocument document = QJsonDocument::fromJson(data, &error_);
+    if (document.isNull() || error_.error != QJsonParseError::NoError) return;
+    if (document.isObject()) {
+        QJsonObject info_ = document.object();
+        int from = info_.value("from" ).toInt();
+        int type = info_.value("type").toInt();
+        Q_UNUSED(from)
+        Q_UNUSED(type)
+        QJsonValue msg = info_.value("data");
+        int to   = msg.toObject().value("to").toInt();
+        Q_EMIT tcpTransformMsgToClient(MessageGroup::ClientSendPicture, to, msg);
     }
 }
 
@@ -200,16 +261,11 @@ HChatClientFileSocket::HChatClientFileSocket(QObject *parent, QTcpSocket *tcpSoc
     connect(m_tcpSocket, SIGNAL(readyRead())         , this, SLOT(sltReadyRead()));
     connect(m_tcpSocket, SIGNAL(bytesWritten(qint64)), this, SLOT(sltUpdateClientProgress(qint64)));
     connect(m_tcpSocket, SIGNAL(disconnected())      , this, SIGNAL(signalDisConnected()));
-
 }
 
-HChatClientFileSocket::~HChatClientFileSocket() {
+HChatClientFileSocket::~HChatClientFileSocket() {}
 
-}
-
-void HChatClientFileSocket::close() {
-
-}
+void HChatClientFileSocket::close() {}
 
 bool HChatClientFileSocket::checkUserId(const qint32 nId, const qint32 &winId) {
     return ((m_nUserId == nId) && (m_nWindowId == winId));
@@ -237,29 +293,22 @@ void HChatClientFileSocket::startTransferFile(QString fileName) {
         return;
     }
 
-    ullSendTotalBytes = fileToSend->size(); // 文件总大小
+    ullSendTotalBytes = fileToSend->size();
 
     QDataStream sendOut(&outBlock, QIODevice::WriteOnly);
     sendOut.setVersion(QDataStream::Qt_4_8);
 
     QString currentFileName = fileName.right(fileName.size() - fileName.lastIndexOf('/')-1);
 
-    // 依次写入总大小信息空间，文件名大小信息空间，文件名
     sendOut << qint64(0) << qint64(0) << currentFileName;
 
-    // 这里的总大小是文件名大小等信息和实际文件大小的总和
     ullSendTotalBytes += outBlock.size();
-
-    // 返回outBolock的开始，用实际的大小信息代替两个qint64(0)空间
     sendOut.device()->seek(0);
     sendOut << ullSendTotalBytes << qint64((outBlock.size() - sizeof(qint64)*2));
-
-    // 发送完头数据后剩余数据的大小
     bytesToWrite = ullSendTotalBytes - m_tcpSocket->write(outBlock);
-
     outBlock.resize(0);
     m_bBusy = true;
-    qDebug() << "Begin to send file" << fileName << m_nUserId << m_nWindowId;
+    qDebug() << "开始发送文件" << fileName << m_nUserId << m_nWindowId;
 }
 
 void HChatClientFileSocket::initSocket() {
@@ -292,92 +341,79 @@ void HChatClientFileSocket::sltReadyRead() {
     QDataStream in(m_tcpSocket);
     in.setVersion(QDataStream::Qt_5_0);
 
-    // 连接时的消息
     if (0 == bytesReceived && (-1 == m_nUserId) && (-1 == m_nWindowId) &&
        (m_tcpSocket->bytesAvailable() == (sizeof(qint32) * 2))) {
-        // 保存ID，方便发送文件
         in >> m_nUserId >> m_nWindowId;
         qDebug() << "获取客户端ID = " << m_nUserId << m_nWindowId;
         Q_EMIT signalConnected();
         return;
     }
-
-    // 如果接收到的数据小于等于20个字节，那么是刚开始接收数据，我们保存为头文件信息
     if (bytesReceived <= (sizeof(qint64)*2)) {
         int nlen = sizeof(qint64) * 2;
-        // 接收数据总大小信息和文件名大小信息
+        /// 接收数据总大小信息和文件名大小信息
         if ((m_tcpSocket->bytesAvailable() >= nlen) && (fileNameSize == 0)) {
             in >> ullRecvTotalBytes >> fileNameSize;
             if (0 != ullRecvTotalBytes) bytesReceived += nlen;
         }
 
-        // 接收文件名，并建立文件
+        /// 接收文件名，并建立文件
         if ((m_tcpSocket->bytesAvailable() >= (qint64)fileNameSize   ) &&
                ((qint64)fileNameSize != 0) && (0 != ullRecvTotalBytes)) {
             in >> fileReadName;
             bytesReceived += fileNameSize;
 
-            fileToRecv->setFileName((-2 == m_nWindowId ? AppConfig::conRecvHeadPath : AppConfig::conRecvFilePath) + fileReadName);
-
+            fileToRecv->setFileName(AppConfig::conRecvFilePath + fileReadName);
             if (!fileToRecv->open(QFile::WriteOnly | QIODevice::Truncate)) {
                 qDebug() << "文件打开失败" << fileReadName;
                 return;
             }
-            qDebug() << "准备接收文件" << fileReadName;
         }
     }
 
-    //如果接收的数据小于总数据，那么写入文件
+    /// 如果接收的数据小于总数据，那么写入文件
     if (bytesReceived < ullRecvTotalBytes) {
         bytesReceived += m_tcpSocket->bytesAvailable();
         inBlock = m_tcpSocket->readAll();
-
-        if (fileToRecv->isOpen())
-            fileToRecv->write(inBlock);
-
+        if (fileToRecv->isOpen()) fileToRecv->write(inBlock);
         inBlock.resize(0);
     }
 
-    // 接收数据完成时
+    /// 接收数据完成时
     if ((bytesReceived >= ullRecvTotalBytes) && (0 != ullRecvTotalBytes)) {
         fileToRecv->close();
         bytesReceived = 0;
         ullRecvTotalBytes = 0;
         fileNameSize = 0;
-        qDebug() << "文件接收完成" << fileToRecv->fileName();
-        // 数据接受完成
         fileTransFinished();
     }
 }
 
 void HChatClientFileSocket::sltUpdateClientProgress(qint64 numBytes) {
-    // 已经发送数据的大小
+    /// 已经发送数据的大小
     bytesWritten += (int) numBytes;
-    // 如果已经发送了数据
+    /// 如果已经发送了数据
     if (bytesToWrite > 0) {
-        // 每次发送loadSize大小的数据，这里设置为4KB，如果剩余的数据不足4KB，就发送剩余数据的大小
+        /// 每次发送loadSize大小的数据，这里设置为4KB，如果剩余的数据不足4KB，就发送剩余数据的大小
         outBlock = fileToSend->read(qMin(bytesToWrite, loadSize));
 
-        // 发送完一次数据后还剩余数据的大小
+        /// 发送完一次数据后还剩余数据的大小
         bytesToWrite -= (int)m_tcpSocket->write(outBlock);
 
-        // 清空发送缓冲区
+        /// 清空发送缓冲区
         outBlock.resize(0);
     }
     else {
-        // 如果没有发送任何数据，则关闭文件
+        /// 如果没有发送任何数据，则关闭文件
         if (fileToSend->isOpen())
             fileToSend->close();
     }
 
-    // 发送完毕
+    /// 发送完毕
     if (bytesWritten >= ullSendTotalBytes) {
-        if (fileToSend->isOpen())
-            fileToSend->close();
+        if (fileToSend->isOpen()) fileToSend->close();
         bytesWritten      = 0;
         ullSendTotalBytes = 0;
         bytesToWrite      = 0;
-        qDebug() << "发送成功" << fileToSend->fileName();
         fileTransFinished();
     }
 }

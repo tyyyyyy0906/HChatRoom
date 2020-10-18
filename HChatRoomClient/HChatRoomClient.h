@@ -5,6 +5,7 @@
 #include <QTimerEvent>
 #include <QCloseEvent>
 #include <QJsonObject>
+#include <QListWidgetItem>
 
 #include "HChatClientSocket.h"
 
@@ -29,7 +30,11 @@ protected:
 
 private:
     QString messageConcat  (QString context = "", QString device = "Client") const;
+    void clientDealPicture (const QString& path, bool status);
+
     void parseServerMessage(const QJsonValue& data);
+    void parseServerFriends(const QJsonValue& data);
+    void parseServerPicture(const QJsonValue& data);
 
 private slots:
     void recvMessage(const int& id_, const QJsonValue& data);
@@ -40,6 +45,9 @@ private slots:
     void onSendImageMessage();
     void onSendFileMessage ();
     void onChangedFontSize ();
+signals:
+    void signalSendMessage(const quint8& type, const QJsonValue& data);
+    void sendFriendsCheck (const quint8& type, const QJsonValue& data);
 private:
     Ui::HChatRoomClient *ui;
     friend class HChatRoomClient_;

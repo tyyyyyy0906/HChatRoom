@@ -32,11 +32,14 @@ private:
     void dealClientLoginOut(const QJsonValue& data);
     void dealClientOnline  (const QJsonValue& data);
     void dealReplyClientMsg(const QByteArray& data);
+    void dealRequsetFriends(const QJsonValue& data);
+    void dealClientPicture (const QByteArray& data);
 
 signals:
     void tcpConnected();
     void tcpDisconnected();
     void tcpRecFile(const QJsonValue& data);
+    void tcpRefreshFirendList(const QJsonValue& data);
     void tcpTransformMsgToClient(const quint8& type, const int& clineID, const QJsonValue& value);
 
 private:
