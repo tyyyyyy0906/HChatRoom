@@ -34,7 +34,7 @@ protected slots:
     virtual void disConnected()  = 0;
 };
 
-/// Message Socket
+/// 消息 Socket
 class HChatMsgServer : public HChatServer {
     Q_OBJECT
 public:
@@ -58,6 +58,7 @@ private slots:
     void msgToAllClient(const quint8 &type, const QJsonValue& data);
 };
 
+/// 文件 Socket
 class HChatFileServer : public HChatServer {
     Q_OBJECT
 public :

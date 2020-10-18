@@ -27,6 +27,9 @@ public:
     static QString conUserName;         // 用户名
     static QString conPassWord;         // 密码
 
+    static int     m_nWinX;
+    static int     m_nWinY;
+
     static void initAppConfig(const QString& installPath);
     static void creatorConfig();
     static void readConfig();

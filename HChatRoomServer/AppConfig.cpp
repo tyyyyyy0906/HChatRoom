@@ -18,6 +18,9 @@ int     AppConfig::conServerMsgPort   = 66666;
 int     AppConfig::conServerFilePort  = 66667;
 int     AppConfig::conID_             = -1;
 
+int     AppConfig::m_nWinX            = 0;
+int     AppConfig::m_nWinY            = 0;
+
 void AppConfig::initAppConfig(const QString &installPath) {
     conAppInstallPath = installPath + "/";
     conAppDatasPath   = conAppInstallPath + "AppData/";

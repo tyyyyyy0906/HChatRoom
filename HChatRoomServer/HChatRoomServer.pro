@@ -16,6 +16,7 @@ SOURCES += \
     HChatDataBaseMgr.cpp \
     HChatMessageNotify.cpp \
     HChatMessageNotifyManage.cpp \
+    HChatRoomMessageBox.cpp \
     HChatServer.cpp \
     HChatServerSocket.cpp \
     main.cpp \
@@ -28,6 +29,7 @@ HEADERS += \
     HChatMessageNotify.h \
     HChatMessageNotifyManage.h \
     HChatRoomLog.h \
+    HChatRoomMessageBox.h \
     HChatRoomServerMain.h \
     HChatServer.h \
     HChatServerSocket.h
@@ -38,6 +40,8 @@ FORMS += \
 RESOURCES += \
     Image.qrc \
     $$PWD/qss/style.qrc
+
+RC_ICONS += $$PWD/ico/server.ico
 
 # Default rules for deployment.
 qnx: target.path = /tmp/$${TARGET}/bin

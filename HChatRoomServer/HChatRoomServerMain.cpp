@@ -4,6 +4,7 @@
 #include "HChatServer.h"
 #include "AppConfig.h"
 #include "Global.h"
+#include "HChatRoomMessageBox.h"
 #include "ui_HChatRoomServerMain.h"
 
 #include <QEvent>
@@ -146,22 +147,33 @@ void HChatRoomServerMain::connectSignal() {
 }
 
 void HChatRoomServerMain::onStartServerButton(void) {
-    bool message_ = s_->messageServer ->startListen(66666);
-    bool file_    = s_->sendFileServer->startListen(66667);
-    ui->serverConnectMsgEdit->append(messageConcat(QString(message_ ? "消息端口监听成功" : "消息端口监听失败")));
-    ui->serverConnectMsgEdit->append(messageConcat(QString(file_    ? "文件端口监听成功" : "文件端口监听失败")));
+    if (!s_->messageServer->hasListen() || !s_->sendFileServer->hasListen()) {
+        bool message_ = s_->messageServer ->startListen(66666);
+        bool file_    = s_->sendFileServer->startListen(66667);
+        ui->serverConnectMsgEdit->append(messageConcat(QString(message_ ? "消息端口监听成功" : "消息端口监听失败")));
+        ui->serverConnectMsgEdit->append(messageConcat(QString(file_    ? "文件端口监听成功" : "文件端口监听失败")));
 
-    if (message_ && file_) {
-        ui->serverSendButton ->setEnabled(true);
-        ui->serverSendEdit   ->setEnabled(true);
-        ui->serverStartButton->setText("关闭服务");
+        if (message_ && file_) {
+            ui->serverSendButton ->setEnabled(true);
+            ui->serverSendEdit   ->setEnabled(true);
+            ui->serverAddressList->setEnabled(false);
+            ui->serverPortEdit   ->setEnabled(false);
+            ui->serverStartButton->setText("关闭服务");
+        }
+        connect(s_->messageServer, &HChatMsgServer::signalUserStatus, s_->messageServer, [&](const QString& data) {
+            ui->serverConnectMsgEdit->append(messageConcat(data));
+        });
     } else {
-
+        ui->serverSendButton ->setEnabled(false);
+        ui->serverSendEdit   ->setEnabled(false);
+        ui->serverAddressList->setEnabled(true);
+        ui->serverPortEdit   ->setEnabled(true);
+        ui->serverStartButton->setText("开启服务");
+        s_->messageServer ->closeListen();
+        s_->sendFileServer->closeListen();
+        ui->serverConnectMsgEdit->append(messageConcat("消息端口监听关闭"));
+        ui->serverConnectMsgEdit->append(messageConcat("文件端口监听关闭"));
     }
-
-    connect(s_->messageServer, &HChatMsgServer::signalUserStatus, s_->messageServer, [&](const QString& data) {
-        ui->serverConnectMsgEdit->append(messageConcat(data));
-    });
 }
 
 ///
@@ -169,15 +181,18 @@ void HChatRoomServerMain::onStartServerButton(void) {
 /// \\\ 广播服务消息给所有客户端
 void HChatRoomServerMain::onSendMessageToClient() {
     QString data_ = ui->serverSendEdit->text();
-    ui->serverConnectMsgEdit->append(messageConcat(data_.isEmpty() ? "" : data_));
-    s_->messageServer->transMessageToAllClient(MessageGroup::ServerSendMsg, data_);
-    ui->serverSendEdit->clear();
-
+    if (!data_.isEmpty()) {
+        ui->serverConnectMsgEdit->append(messageConcat(data_));
+        s_->messageServer->transMessageToAllClient(MessageGroup::ServerSendMsg, data_);
+        ui->serverSendEdit->clear();
+    }
+    else {
+//        HChatRoomSelfMessageBox::infomation(this, tr("输入消息为空"));
+    }
 }
 
 void HChatRoomServerMain::scanAllAddressForDevice() {
     QList<QHostAddress> allAddress_ = QNetworkInterface::allAddresses();
-
     foreach(const QHostAddress& item, allAddress_) {
         if (item.protocol() == QAbstractSocket::IPv4Protocol) {
             ui->serverAddressList->addItem(item.toString());

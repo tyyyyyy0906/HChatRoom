@@ -42,6 +42,8 @@ RESOURCES += \
     $$PWD/ttf/ttf.qrc   \
     $$PWD/image/image.qrc
 
+RC_ICONS += $$PWD/ico/client.ico
+
 # Default rules for deployment.
 qnx: target.path = /tmp/$${TARGET}/bin
 else: unix:!android: target.path = /opt/$${TARGET}/bin
